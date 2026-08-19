@@ -1,5 +1,6 @@
 import { cert, getApps, initializeApp, type App } from "firebase-admin/app";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
+import { getAuth, type Auth } from "firebase-admin/auth";
 
 // Reads credentials from env vars (see .env.local.example) rather than committing
 // the service account JSON file to the repo.
@@ -36,4 +37,8 @@ function getFirebaseAdminApp(): App {
 
 export function getAdminDb(): Firestore {
   return getFirestore(getFirebaseAdminApp());
+}
+
+export function getAdminAuth(): Auth {
+  return getAuth(getFirebaseAdminApp());
 }

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Nav from "@/components/Nav";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,7 +13,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kawal Quest Admin",
+  title: {
+    default: "Kawal Quest Command Center",
+    template: "%s | Kawal Quest",
+  },
   description: "Admin dashboard for Kawal Quest's Firebase project.",
 };
 
@@ -24,9 +26,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-slate-900 text-slate-100">
-        <Nav />
-        <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">{children}</main>
+      <body className="min-h-full bg-[#07110d] text-stone-100">
+        {children}
       </body>
     </html>
   );
