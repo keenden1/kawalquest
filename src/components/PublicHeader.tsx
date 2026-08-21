@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import LogoutButton from "@/components/LogoutButton";
 import { getSessionUser, type SessionUser } from "@/lib/auth";
@@ -16,7 +17,9 @@ export default async function PublicHeader({ active, user }: { active?: string; 
     <header className="sticky top-0 z-40 border-b border-white/8 bg-[#07110d]/90 backdrop-blur-xl">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
         <Link href="/" className="group flex items-center gap-3" aria-label="Kawal Quest home">
-          <span className="grid size-11 place-items-center rounded-xl border border-amber-200/30 bg-gradient-to-br from-amber-200 to-amber-600 text-sm font-black text-[#172018] shadow-lg shadow-black/30 transition-transform group-hover:rotate-3">KQ</span>
+          <span className="relative size-11 overflow-hidden rounded-xl border border-amber-200/30 bg-amber-300 shadow-lg shadow-black/30 transition-transform group-hover:rotate-3">
+            <Image src="/logo.png" alt="" fill sizes="44px" className="object-contain" />
+          </span>
           <span className="hidden sm:block"><span className="block text-sm font-black tracking-[0.12em] text-white">KAWAL QUEST</span><span className="block text-[9px] font-bold uppercase tracking-[0.25em] text-amber-300">Guard the realm</span></span>
         </Link>
         <nav className="hidden items-center gap-7 text-xs font-bold uppercase tracking-[0.12em] md:flex" aria-label="Public navigation">

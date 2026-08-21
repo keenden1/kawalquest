@@ -45,7 +45,9 @@ export default async function PublicLandingPage() {
       <header className="absolute inset-x-0 top-0 z-40 border-b border-white/8 bg-black/10 backdrop-blur-md">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
           <Link href="/" className="flex items-center gap-3" aria-label="Kawal Quest home">
-            <span className="grid size-11 place-items-center rounded-xl border border-amber-200/30 bg-gradient-to-br from-amber-200 to-amber-600 text-sm font-black text-[#172018] shadow-lg shadow-black/30">KQ</span>
+            <span className="relative size-11 overflow-hidden rounded-xl border border-amber-200/30 bg-amber-300 shadow-lg shadow-black/30">
+              <Image src="/logo.png" alt="" fill sizes="44px" className="object-contain" />
+            </span>
             <span><span className="block text-sm font-black tracking-[0.12em] text-white">KAWAL QUEST</span><span className="block text-[9px] font-bold uppercase tracking-[0.25em] text-amber-300">Guard the realm</span></span>
           </Link>
           <nav className="hidden items-center gap-8 text-xs font-bold uppercase tracking-[0.12em] text-stone-300 md:flex" aria-label="Public navigation">
