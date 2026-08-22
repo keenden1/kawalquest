@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import MobileNav from "@/components/MobileNav";
 import { getAdminDb } from "@/lib/firebaseAdmin";
 import { getSessionUser } from "@/lib/auth";
 
@@ -43,7 +44,7 @@ export default async function PublicLandingPage() {
   return (
     <div className="min-h-screen overflow-hidden bg-[#050b08] text-stone-100">
       <header className="absolute inset-x-0 top-0 z-40 border-b border-white/8 bg-black/10 backdrop-blur-md">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
+        <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between px-5 sm:px-8">
           <Link href="/" className="flex items-center gap-3" aria-label="Kawal Quest home">
             <span className="relative size-11 overflow-hidden rounded-xl border border-amber-200/30 bg-amber-300 shadow-lg shadow-black/30">
               <Image src="/logo.png" alt="" fill sizes="44px" className="object-contain" />
@@ -53,13 +54,13 @@ export default async function PublicLandingPage() {
           <nav className="hidden items-center gap-8 text-xs font-bold uppercase tracking-[0.12em] text-stone-300 md:flex" aria-label="Public navigation">
             <Link href="/game" className="hover:text-amber-300">The game</Link><Link href="/adventure" className="hover:text-amber-300">Adventure</Link><Link href="/leaderboard" className="hover:text-amber-300">Leaderboard</Link><Link href="/shop" className="hover:text-amber-300">Shop</Link>{sessionUser && <><Link href="/inventory" className="hover:text-amber-300">Inventory</Link><Link href="/account" className="hover:text-amber-300">Account</Link></>}
           </nav>
-          <div className="flex items-center gap-2">{!sessionUser && <Link href="/login" className="hidden rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-wider text-stone-200 hover:bg-white/8 sm:inline-flex">Sign in</Link>}<a href="#play" className="rounded-xl border border-amber-200/30 bg-amber-300 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-[#172018] hover:bg-amber-200">Play soon</a></div>
+          <div className="flex items-center gap-2">{!sessionUser && <Link href="/login" className="hidden rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-wider text-stone-200 hover:bg-white/8 sm:inline-flex">Sign in</Link>}<a href="#play" className="hidden rounded-xl border border-amber-200/30 bg-amber-300 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-[#172018] hover:bg-amber-200 md:inline-flex">Play soon</a><MobileNav signedIn={Boolean(sessionUser)} cta={{ href: "#play", label: "Play soon" }} /></div>
         </div>
       </header>
 
       <main>
         <section className="relative min-h-[760px] lg:min-h-screen">
-          <Image src="/kawal-quest-hero.png" alt="A Kawal guardian overlooking a tropical island realm at sunrise" fill priority sizes="100vw" className="object-cover object-[68%_center]" />
+          <Image src="/kawal-quest-hero.png" alt="A Kawal guardian overlooking a tropical island realm at sunrise" fill priority sizes="100vw" className="object-cover object-[85%_center] lg:object-[68%_center]" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#050b08] via-[#050b08]/72 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#050b08] via-transparent to-black/20" />
           <div className="relative z-10 mx-auto flex min-h-[760px] max-w-7xl items-center px-5 pb-16 pt-28 sm:px-8 lg:min-h-screen">

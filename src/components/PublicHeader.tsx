@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import LogoutButton from "@/components/LogoutButton";
+import MobileNav from "@/components/MobileNav";
 import { getSessionUser, type SessionUser } from "@/lib/auth";
 
 const links = [
@@ -15,7 +16,7 @@ export default async function PublicHeader({ active, user }: { active?: string; 
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/8 bg-[#07110d]/90 backdrop-blur-xl">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
+      <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-5 sm:px-8">
         <Link href="/" className="group flex items-center gap-3" aria-label="Kawal Quest home">
           <span className="relative size-11 overflow-hidden rounded-xl border border-amber-200/30 bg-amber-300 shadow-lg shadow-black/30 transition-transform group-hover:rotate-3">
             <Image src="/logo.png" alt="" fill sizes="44px" className="object-contain" />
@@ -27,9 +28,10 @@ export default async function PublicHeader({ active, user }: { active?: string; 
           {sessionUser && <Link href="/inventory" aria-current={active === "/inventory" ? "page" : undefined} className={active === "/inventory" ? "text-amber-300" : "text-stone-400 hover:text-amber-300"}>Inventory</Link>}
           {sessionUser && <Link href="/account" aria-current={active === "/account" ? "page" : undefined} className={active === "/account" ? "text-amber-300" : "text-stone-400 hover:text-amber-300"}>Account</Link>}
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="hidden items-center gap-2 md:flex">
           {sessionUser ? <LogoutButton className="rounded-xl border border-white/10 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-stone-300 hover:border-red-300/20 hover:bg-red-400/8 hover:text-red-200" /> : <Link href="/login" className="rounded-xl border border-white/10 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-stone-200 hover:bg-white/8">Sign in</Link>}
         </div>
+        <MobileNav active={active} signedIn={Boolean(sessionUser)} />
       </div>
     </header>
   );

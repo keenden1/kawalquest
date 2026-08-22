@@ -25,7 +25,8 @@ export async function POST(request: Request) {
     const profileRef = getAdminDb().collection("players").doc(decoded.uid);
     await getAdminDb().runTransaction(async (transaction) => {
       const profile = await transaction.get(profileRef);
-      const identity = { username: decoded.name ?? decoded.email?.split("@")[0] ?? "New Kawal", email: decoded.email ?? null, lastLoginAt: FieldValue.serverTimestamp() };
+      const rawUsername = decoded.name ?? decoded.email?.split("@")[0] ?? "New Kawal";
+      const identity = { username: rawUsername.slice(0, 10), email: decoded.email ?? null, lastLoginAt: FieldValue.serverTimestamp() };
       if (profile.exists) transaction.set(profileRef, identity, { merge: true });
       else transaction.set(profileRef, { ...identity, points: 0, mockGold: 0, createdAt: FieldValue.serverTimestamp() });
     });
