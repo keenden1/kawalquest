@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminAuth } from "@/lib/firebaseAdmin";
 import { sendMail } from "@/lib/mailer";
+import { passwordResetEmailHtml } from "@/lib/emailTemplates";
 
 const RESET_COOLDOWN_MS = 4 * 60 * 1000;
 
@@ -17,15 +18,6 @@ function isSameOrigin(request: Request): boolean {
 
 function errorCode(error: unknown): string {
   return typeof error === "object" && error !== null && "code" in error ? String((error as { code: unknown }).code) : "";
-}
-
-function resetEmailHtml(link: string): string {
-  return `<p>Hello,</p>
-<p>Follow this link to reset your Kawal Quest password.</p>
-<p><a href="${link}">${link}</a></p>
-<p>If you didn't ask to reset your password, you can ignore this email.</p>
-<p>Thanks,</p>
-<p>Your Kawal Quest team</p>`;
 }
 
 export async function POST(request: Request) {
@@ -46,7 +38,7 @@ export async function POST(request: Request) {
   try {
     const origin = new URL(request.url).origin;
     const link = await getAdminAuth().generatePasswordResetLink(email, { url: `${origin}/reset-password` });
-    await sendMail({ to: email, subject: "Reset your Kawal Quest password", html: resetEmailHtml(link) });
+    await sendMail({ to: email, subject: "Reset your Kawal Quest password", html: passwordResetEmailHtml(link, origin) });
   } catch (err) {
     // Don't reveal whether the account exists.
     if (errorCode(err).includes("user-not-found")) return NextResponse.json({ success: true });
