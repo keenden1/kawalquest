@@ -9,6 +9,7 @@ import type { Role } from "@/lib/auth";
 const links = [
   { href: "/admin", label: "Overview", glyph: "⌂" },
   { href: "/admin/players", label: "Players", glyph: "♜" },
+  { href: "/admin/shop", label: "Shop", glyph: "⛁" },
   { href: "/admin/remote-config", label: "Game Flags", glyph: "⚑" },
   { href: "/admin/top-up", label: "Top-Up", glyph: "◆" },
 ];

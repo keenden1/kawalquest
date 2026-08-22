@@ -83,7 +83,7 @@ export default function AuthForm() {
     const displayName = String(form.get("displayName") ?? "").trim();
     if (mode === "register" && displayName.length < 2) return setError("Choose a display name with at least 2 characters.");
     if (mode === "register" && displayName.length > 10) return setError("Display name must be 10 characters or fewer.");
-    if (password.length < 8) return setError("Password must be at least 8 characters.");
+    if (mode === "register" && password.length < 8) return setError("Password must be at least 8 characters.");
     if (mode === "register" && password !== confirmPassword) return setError("Passwords do not match.");
 
     setPending(true);
@@ -182,7 +182,7 @@ export default function AuthForm() {
           </label>
         )}
         <label className="block text-xs font-bold uppercase tracking-wider text-stone-500">Email<input name="email" type="email" autoComplete="email" required className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm normal-case tracking-normal text-white placeholder:text-stone-700" placeholder="you@example.com" /></label>
-        <PasswordField id="auth-password" name="password" label="Password" autoComplete={mode === "login" ? "current-password" : "new-password"} placeholder="At least 8 characters" />
+        <PasswordField id="auth-password" name="password" label="Password" autoComplete={mode === "login" ? "current-password" : "new-password"} placeholder={mode === "login" ? "Your password" : "At least 8 characters"} minLength={mode === "register" ? 8 : 1} />
         {mode === "register" && <PasswordField id="auth-confirm-password" name="confirmPassword" label="Confirm password" autoComplete="new-password" placeholder="Re-enter your password" />}
         {mode === "login" && <button type="button" onClick={() => switchMode("reset")} className="block w-full text-right text-xs font-bold text-emerald-400 hover:text-emerald-300">Forgot password?</button>}
         {error && <p className="rounded-xl border border-red-400/20 bg-red-400/8 p-3 text-sm text-red-200" role="alert">{error}</p>}

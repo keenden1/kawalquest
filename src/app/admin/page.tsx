@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const cards = [
   { href: "/admin/players", badge: "Leaderboard", title: "Player Roster", description: "Inspect adventurers, scores, and join dates synced from Firestore.", icon: "♜", accent: "text-emerald-300 bg-emerald-400/10 border-emerald-300/20" },
+  { href: "/admin/shop", badge: "Market", title: "Shop Items", description: "Add and edit the weapons, gear, and collectibles sold on the Shop page.", icon: "⛁", accent: "text-rose-300 bg-rose-400/10 border-rose-300/20" },
   { href: "/admin/remote-config", badge: "Live controls", title: "Game Flags", description: "Control runtime flags and safely stage upcoming game behavior.", icon: "⚑", accent: "text-amber-300 bg-amber-400/10 border-amber-300/20" },
   { href: "/admin/top-up", badge: "Coming soon", title: "Gold Treasury", description: "The future home of player top-ups and transaction history.", icon: "◆", accent: "text-sky-300 bg-sky-400/10 border-sky-300/20" },
 ];
@@ -21,8 +22,8 @@ export default function AdminDashboard() {
       </section>
 
       <section aria-labelledby="operations-heading">
-        <div className="mb-5 flex items-end justify-between gap-4"><div><p className="eyebrow">Operations</p><h2 id="operations-heading" className="mt-1 text-2xl font-bold tracking-tight text-white">Choose your station</h2></div><span className="hidden text-xs font-medium text-stone-500 sm:block">3 modules</span></div>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="mb-5 flex items-end justify-between gap-4"><div><p className="eyebrow">Operations</p><h2 id="operations-heading" className="mt-1 text-2xl font-bold tracking-tight text-white">Choose your station</h2></div><span className="hidden text-xs font-medium text-stone-500 sm:block">4 modules</span></div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {cards.map((card) => (
             <Link key={card.href} href={card.href} className="quest-card game-panel group rounded-2xl p-5 hover:border-emerald-300/25 hover:shadow-emerald-950/25 sm:p-6">
               <div className="flex items-start justify-between gap-4"><span className={`grid size-12 place-items-center rounded-2xl border text-xl ${card.accent}`}>{card.icon}</span><span className="rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-stone-400">{card.badge}</span></div>
