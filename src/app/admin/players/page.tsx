@@ -1,8 +1,7 @@
+import PlayersTable, { type PlayerRow } from "@/components/PlayersTable";
 import { getAdminDb } from "@/lib/firebaseAdmin";
 
 export const dynamic = "force-dynamic";
-
-type PlayerRow = { uid: string; username: string; points: number; createdAt: string | null };
 
 async function fetchPlayers(): Promise<{ players: PlayerRow[]; error: string | null }> {
   try {
@@ -66,30 +65,7 @@ export default async function PlayersPage() {
         </div>
       )}
 
-      {!error && players.length > 0 && (
-        <section className="game-panel overflow-hidden rounded-2xl">
-          <div className="flex items-center justify-between border-b border-white/7 px-5 py-4">
-            <div><h2 className="font-bold text-white">Adventurer rankings</h2><p className="mt-0.5 text-xs text-stone-500">Sorted by highest quest points</p></div>
-            <span className="rounded-full bg-emerald-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">Live data</span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-black/15 text-stone-500"><tr>{["Rank", "Adventurer", "Quest points", "Player ID", "Joined"].map((heading) => <th key={heading} className="px-5 py-3 text-[10px] font-bold uppercase tracking-wider">{heading}</th>)}</tr></thead>
-              <tbody className="divide-y divide-white/6">
-                {players.map((player, index) => (
-                  <tr key={player.uid} className="transition-colors hover:bg-white/3">
-                    <td className="px-5 py-4"><span className={`grid size-8 place-items-center rounded-lg text-xs font-extrabold ${index < 3 ? "bg-amber-300/12 text-amber-300" : "bg-white/4 text-stone-500"}`}>{index + 1}</span></td>
-                    <td className="px-5 py-4 font-bold text-stone-100">{player.username}</td>
-                    <td className="px-5 py-4 font-mono font-bold text-emerald-300">{player.points.toLocaleString()}</td>
-                    <td className="max-w-48 truncate px-5 py-4 font-mono text-xs text-stone-600" title={player.uid}>{player.uid}</td>
-                    <td className="whitespace-nowrap px-5 py-4 text-stone-500">{player.createdAt ? new Date(player.createdAt).toLocaleDateString(undefined, { dateStyle: "medium" }) : "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
+      {!error && players.length > 0 && <PlayersTable players={players} />}
     </div>
   );
 }

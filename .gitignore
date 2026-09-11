@@ -21,6 +21,7 @@
 /build
 
 # misc
+/image/
 .DS_Store
 Thumbs.db
 Desktop.ini
@@ -51,3 +52,6 @@ next-env.d.ts
 # local tooling
 .eslintcache
 *.log
+
+# Cloudflare Wrangler local dev state (R2/KV/D1 simulation, cache) -- never commit
+.wrangler/

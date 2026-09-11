@@ -27,6 +27,12 @@ export type ShopItem = {
   imageUrl: string;
   order: number;
   active: boolean;
+  // Visible on the public /shop page (as a "Coming Soon" preview) but deliberately
+  // excluded from what Unity fetches -- see FirebaseManager.FetchShopItems / Shop.cs,
+  // which skip any entry with this set rather than letting a player buy something not
+  // actually for sale yet. Distinct from `active`: inactive = hidden everywhere,
+  // active + comingSoon = visible as a teaser, not purchasable anywhere.
+  comingSoon: boolean;
   createdAt: string | null;
 
   // Weapon + Gear share these
@@ -97,6 +103,7 @@ export function parseShopItemInput(body: unknown): { data: ShopItemInput } | { e
       imageUrl,
       order: asNumber(raw.order, 0),
       active: Boolean(raw.active),
+      comingSoon: Boolean(raw.comingSoon),
       damage: asNumber(raw.damage),
       critRate: asNumber(raw.critRate),
       critDamage: asNumber(raw.critDamage),

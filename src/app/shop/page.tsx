@@ -7,12 +7,33 @@ import { getAdminDb } from "@/lib/firebaseAdmin";
 export const metadata: Metadata = { title: "Shop" };
 export const dynamic = "force-dynamic";
 
+// Weapon-category items carry a weaponType that Unity's own equip check already treats
+// as character-restricted (InventoryScript.cs: "Book" -> girl-only, "Sword" -> boy-only;
+// no counterpart Girl asset exists for "Claymore", so it's grouped with Sword/boy here).
+// Every other category (Gear/Consumable/Usable/Findable) has no such restriction in Unity,
+// so those items are treated as usable by either character.
+function deriveCharacter(category: string, weaponType: unknown): "Boy" | "Girl" | null {
+  if (category !== "Weapon") return null;
+  return weaponType === "Book" ? "Girl" : "Boy";
+}
+
 async function getShopItems(): Promise<CatalogItem[]> {
   try {
     const snapshot = await getAdminDb().collection("shopItems").where("active", "==", true).orderBy("order", "asc").get();
     return snapshot.docs.map((doc) => {
       const data = doc.data();
-      return { id: doc.id, name: data.name ?? "Unnamed item", category: data.category ?? "Findable", price: data.price ?? 0, rarity: data.rarity ?? 1, imageUrl: data.imageUrl ?? "", descriptionEN: data.descriptionEN ?? "" };
+      const category = data.category ?? "Findable";
+      return {
+        id: doc.id,
+        name: data.name ?? "Unnamed item",
+        category,
+        price: data.price ?? 0,
+        rarity: data.rarity ?? 1,
+        imageUrl: data.imageUrl ?? "",
+        descriptionEN: data.descriptionEN ?? "",
+        comingSoon: Boolean(data.comingSoon),
+        character: deriveCharacter(category, data.weaponType),
+      };
     });
   } catch {
     return [];

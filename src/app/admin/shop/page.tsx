@@ -23,6 +23,7 @@ export default async function AdminShopPage() {
       imageUrl: data.imageUrl ?? "",
       order: data.order ?? 0,
       active: Boolean(data.active),
+      comingSoon: Boolean(data.comingSoon),
       createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : null,
       damage: data.damage ?? 0,
       critRate: data.critRate ?? 0,

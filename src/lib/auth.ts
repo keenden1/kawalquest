@@ -3,11 +3,12 @@ import "server-only";
 import { cookies } from "next/headers";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { getAdminAuth } from "@/lib/firebaseAdmin";
+import { normalizeRole, type Role } from "@/lib/roles";
+
+export { ROLES, isAdminRole, canUseCheatButton, normalizeRole, type Role } from "@/lib/roles";
 
 export const SESSION_COOKIE_NAME = "kawal_session";
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 5;
-export const ROLES = ["user", "admin", "superadmin"] as const;
-export type Role = (typeof ROLES)[number];
 
 export type SessionUser = {
   uid: string;
@@ -15,14 +16,6 @@ export type SessionUser = {
   name: string | null;
   role: Role;
 };
-
-export function normalizeRole(value: unknown): Role {
-  return ROLES.includes(value as Role) ? (value as Role) : "user";
-}
-
-export function isAdminRole(role: Role): boolean {
-  return role === "admin" || role === "superadmin";
-}
 
 export function decodedTokenToUser(token: DecodedIdToken): SessionUser {
   return {

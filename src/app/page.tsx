@@ -35,10 +35,26 @@ async function getTopPlayers(): Promise<RankedPlayer[]> {
   }
 }
 
+type ApkDownloadConfig = { url: string; enabled: boolean };
+
+async function getApkDownloadConfig(): Promise<ApkDownloadConfig> {
+  try {
+    const snap = await getAdminDb().collection("adminConfig").doc("flags").get();
+    const data = snap.data();
+    return {
+      url: typeof data?.apkDownloadUrl === "string" ? data.apkDownloadUrl : "",
+      enabled: Boolean(data?.apkDownloadEnabled ?? false),
+    };
+  } catch {
+    return { url: "", enabled: false };
+  }
+}
+
 export default async function PublicLandingPage() {
-  const [topPlayers, sessionUser] = await Promise.all([
+  const [topPlayers, sessionUser, apkDownload] = await Promise.all([
     getTopPlayers(),
     getSessionUser(),
+    getApkDownloadConfig(),
   ]);
 
   return (
@@ -54,7 +70,7 @@ export default async function PublicLandingPage() {
           <nav className="hidden items-center gap-8 text-xs font-bold uppercase tracking-[0.12em] text-stone-300 md:flex" aria-label="Public navigation">
             <Link href="/game" className="hover:text-amber-300">The game</Link><Link href="/adventure" className="hover:text-amber-300">Adventure</Link><Link href="/leaderboard" className="hover:text-amber-300">Leaderboard</Link><Link href="/shop" className="hover:text-amber-300">Shop</Link>{sessionUser && <><Link href="/inventory" className="hover:text-amber-300">Inventory</Link><Link href="/account" className="hover:text-amber-300">Account</Link></>}
           </nav>
-          <div className="flex items-center gap-2">{!sessionUser && <Link href="/login" className="hidden rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-wider text-stone-200 hover:bg-white/8 sm:inline-flex">Sign in</Link>}<a href="#play" className="hidden rounded-xl border border-amber-200/30 bg-amber-300 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-[#172018] hover:bg-amber-200 md:inline-flex">Play soon</a><MobileNav signedIn={Boolean(sessionUser)} cta={{ href: "#play", label: "Play soon" }} /></div>
+          <div className="flex items-center gap-2">{!sessionUser && <Link href="/login" className="hidden rounded-xl px-4 py-2.5 text-xs font-black uppercase tracking-wider text-stone-200 hover:bg-white/8 sm:inline-flex">Sign in</Link>}<a href="#play" className="hidden rounded-xl border border-amber-200/30 bg-amber-300 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-[#172018] hover:bg-amber-200 md:inline-flex">Play now</a><MobileNav signedIn={Boolean(sessionUser)} cta={{ href: "#play", label: "Play now" }} /></div>
         </div>
       </header>
 
@@ -99,7 +115,7 @@ export default async function PublicLandingPage() {
         </section>
 
         <section id="play" className="px-5 pb-24 sm:px-8 lg:pb-32">
-          <div className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl border border-amber-300/15 bg-gradient-to-br from-[#173525] to-[#09130e] px-6 py-16 text-center sm:px-10 lg:py-20"><div className="absolute left-1/2 top-0 size-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-300/10 blur-3xl" /><div className="relative"><p className="eyebrow">The quest is forming</p><h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white sm:text-5xl">Ready when the realm calls?</h2><p className="mx-auto mt-4 max-w-xl leading-7 text-stone-400">Kawal Quest is currently in development. Follow the journey and be among the first guardians to enter.</p><span className="mt-8 inline-flex cursor-not-allowed rounded-xl bg-stone-100/10 px-6 py-3.5 text-sm font-bold text-stone-400" aria-disabled="true">Download coming soon</span></div></div>
+          <div className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl border border-amber-300/15 bg-gradient-to-br from-[#173525] to-[#09130e] px-6 py-16 text-center sm:px-10 lg:py-20"><div className="absolute left-1/2 top-0 size-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-300/10 blur-3xl" /><div className="relative"><p className="eyebrow">The quest is forming</p><h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white sm:text-5xl">Ready when the realm calls?</h2><p className="mx-auto mt-4 max-w-xl leading-7 text-stone-400">Kawal Quest is currently in development. Follow the journey and be among the first guardians to enter.</p>{!apkDownload.enabled ? <span className="mt-8 inline-flex items-center gap-2 rounded-xl border border-amber-300/20 bg-amber-300/8 px-6 py-3.5 text-sm font-bold text-amber-200" aria-disabled="true">⚠ Under maintenance</span> : apkDownload.url ? <a href={apkDownload.url} download className="mt-8 inline-flex items-center gap-2 rounded-xl bg-amber-300 px-6 py-3.5 text-sm font-black text-[#172018] shadow-xl shadow-black/30 hover:bg-amber-200">⬇ Download APK</a> : <span className="mt-8 inline-flex cursor-not-allowed rounded-xl bg-stone-100/10 px-6 py-3.5 text-sm font-bold text-stone-400" aria-disabled="true">Download coming soon</span>}</div></div>
         </section>
       </main>
 

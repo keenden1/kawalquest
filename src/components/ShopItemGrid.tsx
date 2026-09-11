@@ -2,10 +2,23 @@
 
 import { useEffect, useState } from "react";
 
-export type CatalogItem = { id: string; name: string; category: string; price: number; rarity: number; imageUrl: string; descriptionEN: string };
+export type CatalogItem = {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  rarity: number;
+  imageUrl: string;
+  descriptionEN: string;
+  comingSoon: boolean;
+  character: "Boy" | "Girl" | null; // null = usable by either character (non-Weapon items)
+};
+
+type CharacterFilter = "All" | "Boy" | "Girl";
 
 export default function ShopItemGrid({ items }: { items: CatalogItem[] }) {
   const [zoomed, setZoomed] = useState<CatalogItem | null>(null);
+  const [characterFilter, setCharacterFilter] = useState<CharacterFilter>("All");
 
   useEffect(() => {
     if (!zoomed) return;
@@ -16,33 +29,67 @@ export default function ShopItemGrid({ items }: { items: CatalogItem[] }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [zoomed]);
 
+  const hasCharacterItems = items.some((item) => item.character !== null);
+  const visibleItems = characterFilter === "All" ? items : items.filter((item) => item.character === null || item.character === characterFilter);
+
   return (
     <>
-      <div className="mt-14 grid gap-4 sm:grid-cols-3">
-        {items.map((item) => (
-          <article key={item.id} className="game-panel overflow-hidden rounded-2xl">
+      {hasCharacterItems && (
+        <div className="mt-10 flex items-center gap-2" role="group" aria-label="Filter by character">
+          {(["All", "Boy", "Girl"] as const).map((option) => (
             <button
+              key={option}
               type="button"
-              onClick={() => item.imageUrl && setZoomed(item)}
-              disabled={!item.imageUrl}
-              aria-label={item.imageUrl ? `Zoom in on ${item.name}` : undefined}
-              className={`grid aspect-[4/3] w-full place-items-center overflow-hidden bg-gradient-to-br from-amber-300/10 to-emerald-400/5 ${item.imageUrl ? "cursor-zoom-in" : "cursor-default"}`}
+              onClick={() => setCharacterFilter(option)}
+              className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-wider transition-colors ${
+                characterFilter === option ? "bg-amber-300 text-[#172018]" : "border border-white/10 text-stone-400 hover:bg-white/8"
+              }`}
             >
-              {item.imageUrl ? (
-                <img src={item.imageUrl} alt={item.name} className="size-full object-cover transition-transform duration-200 hover:scale-105" />
-              ) : (
-                <span className="text-5xl text-amber-300/50">◆</span>
-              )}
+              {option}
             </button>
-            <div className="p-5">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-300">{item.category}</p>
-              <h2 className="mt-2 text-lg font-black text-white">{item.name}</h2>
-              {item.descriptionEN && <p className="mt-2 line-clamp-2 text-sm leading-6 text-stone-500">{item.descriptionEN}</p>}
-              <p className="mt-4 text-sm font-bold text-amber-300">◆ {item.price.toLocaleString()} Gold</p>
-            </div>
-          </article>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {visibleItems.length === 0 ? (
+        <div className="game-panel mt-8 rounded-3xl p-10 text-center text-stone-500">No items for that character yet.</div>
+      ) : (
+        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          {visibleItems.map((item) => (
+            <article key={item.id} className={`game-panel relative overflow-hidden rounded-2xl ${item.comingSoon ? "opacity-70" : ""}`}>
+              {item.comingSoon && (
+                <span className="absolute right-3 top-3 z-10 rounded-full border border-amber-300/30 bg-[#0a1711]/90 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-amber-300">
+                  Coming Soon
+                </span>
+              )}
+              {item.character && (
+                <span className="absolute left-3 top-3 z-10 rounded-full border border-emerald-300/30 bg-[#0a1711]/90 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-emerald-300">
+                  {item.character}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => item.imageUrl && setZoomed(item)}
+                disabled={!item.imageUrl}
+                aria-label={item.imageUrl ? `Zoom in on ${item.name}` : undefined}
+                className={`grid aspect-[4/3] w-full place-items-center overflow-hidden bg-gradient-to-br from-amber-300/10 to-emerald-400/5 ${item.imageUrl ? "cursor-zoom-in" : "cursor-default"}`}
+              >
+                {item.imageUrl ? (
+                  <img src={item.imageUrl} alt={item.name} className={`size-full object-cover transition-transform duration-200 ${item.comingSoon ? "grayscale" : "hover:scale-105"}`} />
+                ) : (
+                  <span className="text-5xl text-amber-300/50">◆</span>
+                )}
+              </button>
+              <div className="p-5">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-300">{item.category}</p>
+                <h2 className="mt-2 text-lg font-black text-white">{item.name}</h2>
+                {item.descriptionEN && <p className="mt-2 line-clamp-2 text-sm leading-6 text-stone-500">{item.descriptionEN}</p>}
+                <p className="mt-4 text-sm font-bold text-amber-300">{item.comingSoon ? "Not yet available" : `◆ ${item.price.toLocaleString()} Gold`}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
 
       {zoomed && (
         <div

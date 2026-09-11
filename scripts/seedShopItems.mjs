@@ -1,14 +1,14 @@
 // One-time import of the Kawal Quest Unity project's existing hand-authored shop items
-// (Divine Sword, Eye of Eternity Ring, Ancestor Pendants, Double Pistol, Double Pistol Red)
-// into the web dashboard's `shopItems` Firestore collection, so they show up on /shop and
-// /admin/shop the same way any web-added item does. Uploads each item's icon (read from
-// the sibling Unity project's Assets/Resources/Sprite/ folder) to Firebase Storage first.
+// (boy weapons/gear + girl Book-type weapons) into the web dashboard's `shopItems`
+// Firestore collection, so they show up on /shop and /admin/shop the same way any
+// web-added item does. Uploads each item's icon (read from the sibling Unity project's
+// Assets/Resources/Sprite/ folder) to Firebase Storage first.
 //
 // Run with: npm run seed:shop
 // Requires .env.local to be filled in (see .env.local.example).
 //
 // Idempotent: fixed doc IDs (unity-*) and re-uploads/overwrites the same Storage paths on
-// every run, so re-running updates these 5 items in place instead of duplicating them.
+// every run, so re-running updates these items in place instead of duplicating them.
 // Does NOT touch any other shopItems documents (admin-created ones are left alone).
 
 import { readFileSync } from "node:fs";
@@ -130,6 +130,115 @@ const items = [
     range: 0,
     spriteFile: null,
   },
+  // Girl-character weapons (Assets/Scripts/SO/Assets/Weapons/Girl Weapon/) -- weaponType
+  // "Book" is what InventoryScript.cs's equip check treats as girl-only (Cannot Equip for
+  // Boy), mirroring how "Sword" above is boy-only.
+  {
+    id: "unity-basic-book",
+    name: "Basic Book",
+    category: "Weapon",
+    price: 200,
+    rarity: 3,
+    descriptionEN: "Wielded by beginner mages to safeguard their homeland.",
+    descriptionTL: "Gamit ng mga nag uumpisang salamangkero upang protektahan ang mga kababayan.",
+    order: 60,
+    active: true,
+    damage: 20,
+    critRate: 0.02,
+    critDamage: 0.01,
+    weaponType: "Book",
+    range: 0,
+    spriteFile: "toppng.com-book-6095x5031.png",
+  },
+  {
+    id: "unity-basic-blue-book",
+    name: "Basic blue book",
+    category: "Weapon",
+    price: 100,
+    rarity: 3,
+    descriptionEN: "Wielded by beginner mages to safeguard their homeland.",
+    descriptionTL: "Gamit ng mga nag uumpisang salamangkero upang protektahan ang mga kababayan.",
+    order: 70,
+    active: true,
+    damage: 20,
+    critRate: 0.02,
+    critDamage: 0.01,
+    weaponType: "Book",
+    range: 0,
+    spriteFile: "ChatGPT Image Jan 8, 2026, 06_22_06 PM.png",
+  },
+  {
+    id: "unity-basic-red-book",
+    name: "Basic red book",
+    category: "Weapon",
+    price: 100,
+    rarity: 3,
+    descriptionEN: "Wielded by beginner mages to safeguard their homeland.",
+    descriptionTL: "Gamit ng mga nag uumpisang salamangkero upang protektahan ang mga kababayan.",
+    order: 80,
+    active: true,
+    damage: 20,
+    critRate: 0.02,
+    critDamage: 0.01,
+    weaponType: "Book",
+    range: 0,
+    spriteFile: "ChatGPT Image Jan 8, 2026, 06_19_21 PM.png",
+  },
+  {
+    id: "unity-paladin-book",
+    name: "Paladin book",
+    category: "Weapon",
+    price: 2000,
+    rarity: 5,
+    descriptionEN: "Wielded by ancient mages, so powerful that a single incantation can drive away evil forces.",
+    descriptionTL: "Ginagamit ng mga sinaunang salamangkero, makapangyarihan at isang bigkas ng spell lang ay natatakwil na ang mga masasamang elemento",
+    order: 90,
+    active: true,
+    damage: 200,
+    critRate: 0.8,
+    critDamage: 0.1,
+    weaponType: "Book",
+    range: 0,
+    spriteFile: "ChatGPT Image Jan 8, 2026, 06_27_12 PM.png",
+  },
+  {
+    id: "unity-obsidian-warrior-necklace",
+    name: "OBSIDIAN WARRIOR NECKLACE",
+    category: "Gear",
+    price: 400,
+    rarity: 4,
+    descriptionEN: "A rugged obsidian necklace that strengthens its wearer, boosting courage and resilience in battle.",
+    descriptionTL: "Isang matibay na kuwintas na gawa sa obsidian na nagpapalakas ng tapang at tibay ng nagsusuot sa laban.",
+    order: 100,
+    active: true,
+    damage: 0,
+    critRate: 0,
+    critDamage: 0,
+    gearType: "Pendant",
+    defense: 40,
+    health: 300,
+    moveSpeed: 0,
+    spriteFile: "csm_O4.06.1972_2_7dca282331-removebg-preview.png",
+  },
+  {
+    id: "unity-obsidian-ring",
+    name: "OBSIDIAN RING",
+    category: "Gear",
+    price: 400,
+    rarity: 4,
+    descriptionEN: "A ring forged from obsidian, dark and smooth, pulsing with mysterious ancient energy.",
+    descriptionTL: "Isang singsing na hinubog mula sa obsidian, madilim at makinis, naglalaman ng misteryosong sinaunang enerhiya.",
+    order: 110,
+    active: true,
+    damage: 170,
+    critRate: 0.2,
+    critDamage: 0.3,
+    gearType: "Ring",
+    defense: 0,
+    health: 0,
+    moveSpeed: 0,
+    spriteFile: "—Pngtree—game jewelry ring props_5916096.png",
+  },
 ];
 
 async function uploadIcon(bucket, itemId, spriteFile) {
@@ -156,7 +265,19 @@ async function main() {
   const db = getFirestore(app);
   const bucket = getStorage(app).bucket(`${serviceAccount.projectId}.firebasestorage.app`);
 
-  for (const item of items) {
+  const requestedIds = process.argv.slice(2);
+  const itemsToSeed = requestedIds.length > 0
+    ? items.filter((item) => requestedIds.includes(item.id))
+    : items;
+  const missingIds = requestedIds.filter((id) => !items.some((item) => item.id === id));
+  if (missingIds.length > 0) {
+    throw new Error(`Unknown shop seed item ID(s): ${missingIds.join(", ")}`);
+  }
+
+  console.log(`Target Firebase project: ${serviceAccount.projectId}`);
+  console.log(`Seeding ${itemsToSeed.length} item(s): ${itemsToSeed.map((item) => item.id).join(", ")}`);
+
+  for (const item of itemsToSeed) {
     const { spriteFile, ...fields } = item;
     console.log(`Uploading icon for "${item.name}"...`);
     const imageUrl = await uploadIcon(bucket, item.id, spriteFile);
@@ -169,7 +290,7 @@ async function main() {
     console.log(`  -> shopItems/${id} written${imageUrl ? " (with icon)" : " (no icon in Unity, none uploaded)"}`);
   }
 
-  console.log(`\nDone. ${items.length} items written to shopItems.`);
+  console.log(`\nDone. ${itemsToSeed.length} items written to shopItems.`);
 }
 
 main().catch((err) => {
