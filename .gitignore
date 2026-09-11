@@ -50,6 +50,7 @@ yarn-error.log*
 next-env.d.ts
 
 # local tooling
+/tools/codex-usage/
 .eslintcache
 *.log
 
