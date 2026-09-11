@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     case "payment": {
       if (!uid) return NextResponse.json({ error: { code: "INVALID_USER", message: "No user id provided." } }, { status: 400 });
       const transactionId = payload.transaction?.id != null ? String(payload.transaction.id) : null;
-      const sku = payload.purchase?.items?.[0]?.sku;
+      const sku = payload.purchase?.virtual_items?.items?.[0]?.sku ?? payload.purchase?.items?.[0]?.sku;
       const selectedPackage = getXsollaPackage(sku);
       if (!transactionId || !selectedPackage) {
         console.error("xsolla webhook: payment event missing transaction id or unrecognized sku", { transactionId, sku });
@@ -121,5 +121,8 @@ type XsollaWebhookPayload = {
   notification_type?: string;
   user?: { id?: string | { value?: string } };
   transaction?: { id?: string | number };
-  purchase?: { items?: Array<{ sku?: string }> };
+  purchase?: {
+    virtual_items?: { items?: Array<{ sku?: string }> };
+    items?: Array<{ sku?: string }>;
+  };
 };

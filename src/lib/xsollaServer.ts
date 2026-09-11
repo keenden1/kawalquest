@@ -42,7 +42,9 @@ export async function createXsollaToken(params: { uid: string; email: string; sk
         email: { value: params.email },
       },
       purchase: {
-        items: [{ sku: params.sku, quantity: 1 }],
+        virtual_items: {
+          items: [{ sku: params.sku, amount: 1 }],
+        },
       },
       settings: {
         return_url: params.returnUrl,
