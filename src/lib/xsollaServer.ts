@@ -1,10 +1,7 @@
 import "server-only";
 import { createHash, timingSafeEqual } from "node:crypto";
 
-// Whether real Xsolla credentials are present. The project has not been approved/activated
-// yet (see CLAUDE.md's Xsolla checklist) -- every caller of createXsollaToken/the token API
-// route must check this first and fail soft ("not configured yet") rather than attempting
-// a request that can only ever fail.
+// Checks credential presence; project activation is managed in Xsolla.
 export function isXsollaConfigured(): boolean {
   return Boolean(process.env.XSOLLA_PROJECT_ID && process.env.XSOLLA_MERCHANT_ID && process.env.XSOLLA_API_KEY);
 }
@@ -15,15 +12,8 @@ function isSandbox(): boolean {
   return process.env.XSOLLA_SANDBOX !== "false";
 }
 
-/**
- * Requests a Xsolla Pay Station token for a single virtual-item purchase.
- *
- * NOT VERIFIED against a live Xsolla account -- there is none yet. Based on Xsolla's
- * documented Pay Station Token API (Merchant API v2, "create token" for a purchase of one
- * or more `items` by SKU) as of when this was written. Before relying on this in
- * production, re-check the request shape, auth scheme, and response field names against
- * https://developers.xsolla.com/api/pay-station-merchant/ once real credentials exist --
- * exact field names or the auth mechanism may have changed since.
+/** Creates a catalog order and payment token for one package.
+ * https://developers.xsolla.com/api/catalog/payment-server-side
  */
 export async function createXsollaToken(params: { uid: string; email: string; sku: string; returnUrl: string }): Promise<{ token: string; paymentUrl: string }> {
   const projectId = process.env.XSOLLA_PROJECT_ID;
@@ -33,22 +23,22 @@ export async function createXsollaToken(params: { uid: string; email: string; sk
 
   const sandbox = isSandbox();
   const auth = Buffer.from(`${merchantId}:${apiKey}`).toString("base64");
-  const response = await fetch(`https://api.xsolla.com/merchant/v2/projects/${projectId}/token`, {
+  const response = await fetch(`https://store.xsolla.com/api/v3/project/${projectId}/admin/payment/token`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Basic ${auth}` },
     body: JSON.stringify({
+      sandbox,
       user: {
         id: { value: params.uid },
         email: { value: params.email },
+        country: { value: "PH", allow_modify: true },
       },
       purchase: {
-        virtual_items: {
-          items: [{ sku: params.sku, amount: 1 }],
-        },
+        items: [{ sku: params.sku, quantity: 1 }],
       },
       settings: {
         return_url: params.returnUrl,
-        ...(sandbox ? { mode: "sandbox" } : {}),
+        currency: "PHP",
       },
     }),
   });

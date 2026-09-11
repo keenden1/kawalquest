@@ -4,19 +4,7 @@ import { getAdminDb } from "@/lib/firebaseAdmin";
 import { getXsollaPackage } from "@/lib/xsolla";
 import { verifyXsollaSignature } from "@/lib/xsollaServer";
 
-/**
- * Receives Xsolla Pay Station webhook events. NOT VERIFIED against a real delivery -- no
- * Xsolla account exists yet to send one. Event shape (`notification_type`, `user.id`,
- * `transaction.id`, `purchase.items`) is based on Xsolla's documented webhook payloads as of
- * when this was written; re-check against a real payload (Xsolla Console lets you replay
- * webhook attempts once you have an account) before trusting this in production.
- *
- * Does not touch the player's Unity saveData blob at all (deliberate -- see CLAUDE.md's
- * "Web /inventory shows the real character" section for why editing that from the web is
- * considered too risky). Instead, a successful payment appends to
- * players/{uid}.pendingGoldCredits, which Unity reads, applies to playerData.Gold, and
- * clears the next time the player does a full login (see FirebaseManager.cs).
- */
+/** Credits catalog orders once by order ID. Sandbox orders never grant live Gold. */
 export async function POST(request: Request) {
   const rawBody = await request.text();
   const signature = request.headers.get("authorization");
@@ -33,7 +21,7 @@ export async function POST(request: Request) {
 
   const db = getAdminDb();
   // Webhooks use a scalar user.id; token creation uses user.id.value.
-  const userId = payload.user?.id;
+  const userId = payload.user?.external_id ?? payload.user?.id;
   const rawUid = typeof userId === "object" && userId !== null ? userId.value : userId;
   const uid = typeof rawUid === "string" && rawUid.length > 0 && !rawUid.includes("/")
     ? rawUid
@@ -47,12 +35,13 @@ export async function POST(request: Request) {
       return NextResponse.json({});
     }
 
-    case "payment": {
+    case "order_paid": {
+      if (payload.order?.mode === "sandbox") return NextResponse.json({});
       if (!uid) return NextResponse.json({ error: { code: "INVALID_USER", message: "No user id provided." } }, { status: 400 });
-      const transactionId = payload.transaction?.id != null ? String(payload.transaction.id) : null;
-      const sku = payload.purchase?.virtual_items?.items?.[0]?.sku ?? payload.purchase?.items?.[0]?.sku;
+      const transactionId = payload.order?.id != null ? `order_${payload.order.id}` : null;
+      const sku = payload.items?.[0]?.sku;
       const selectedPackage = getXsollaPackage(sku);
-      if (!transactionId || !selectedPackage) {
+      if (!transactionId || !selectedPackage || payload.items?.length !== 1 || payload.items[0].quantity !== 1) {
         console.error("xsolla webhook: payment event missing transaction id or unrecognized sku", { transactionId, sku });
         return NextResponse.json({ error: { code: "INVALID_PAYLOAD", message: "Missing transaction id or unrecognized item." } }, { status: 400 });
       }
@@ -85,14 +74,15 @@ export async function POST(request: Request) {
       return NextResponse.json({});
     }
 
-    case "refund": {
+    case "order_canceled": {
+      if (payload.order?.mode === "sandbox") return NextResponse.json({});
       // Deliberately conservative: only reverses a credit that Unity hasn't picked up yet.
       // If it's already been applied to the player's live Gold, that Gold may well have
       // already been spent in-game -- safely clawing it back would need to touch saveData,
       // which this project has already decided the web should never do. Logged instead for
       // manual reconciliation in that case.
       if (!uid) return NextResponse.json({});
-      const transactionId = payload.transaction?.id != null ? String(payload.transaction.id) : null;
+      const transactionId = payload.order?.id != null ? `order_${payload.order.id}` : null;
       if (!transactionId) return NextResponse.json({});
 
       const playerRef = db.collection("players").doc(uid);
@@ -119,7 +109,9 @@ export async function POST(request: Request) {
 
 type XsollaWebhookPayload = {
   notification_type?: string;
-  user?: { id?: string | { value?: string } };
+  user?: { id?: string | { value?: string }; external_id?: string };
+  order?: { id?: string | number; mode?: string };
+  items?: Array<{ sku?: string; quantity?: number }>;
   transaction?: { id?: string | number };
   purchase?: {
     virtual_items?: { items?: Array<{ sku?: string }> };
