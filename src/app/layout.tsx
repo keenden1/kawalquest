@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     default: "Kawal Quest Command Center",
     template: "%s | Kawal Quest",
   },
-  description: "Admin dashboard for Kawal Quest's Firebase project.",
+  description: "Admin dashboard for Kawal Quest.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

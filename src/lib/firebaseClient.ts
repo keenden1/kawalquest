@@ -16,7 +16,7 @@ export function hasFirebaseClientConfig(): boolean {
 
 export function getClientAuth() {
   if (!hasFirebaseClientConfig()) {
-    throw new Error("Firebase web authentication is not configured.");
+    throw new Error("Web authentication is not configured.");
   }
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   return getAuth(app);

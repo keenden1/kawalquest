@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   try {
     const body: unknown = await request.json();
     const idToken = typeof body === "object" && body !== null && "idToken" in body ? (body as { idToken?: unknown }).idToken : null;
-    if (typeof idToken !== "string" || idToken.length < 100) return NextResponse.json({ error: "A valid Firebase ID token is required." }, { status: 400 });
+    if (typeof idToken !== "string" || idToken.length < 100) return NextResponse.json({ error: "A valid sign-in token is required." }, { status: 400 });
 
     const auth = getAdminAuth();
     const decoded = await auth.verifyIdToken(idToken, true);

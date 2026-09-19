@@ -2,13 +2,32 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 
+import AboutCreditsEditor from "@/components/AboutCreditsEditor";
+import MobPreviewGallery from "@/components/MobPreviewGallery";
+import { UNITY_BOSS_NAMES, UNITY_MOB_NAMES } from "@/lib/contentNames";
+
 type LoadState = "loading" | "ready" | "error";
+
 
 export default function RemoteConfigPage() {
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [showCheatButton, setShowCheatButton] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [chaseDistances, setChaseDistances] = useState<string[]>(Array(10).fill(""));
+  const [chaseInputs, setChaseInputs] = useState<string[]>(Array(10).fill(""));
+  const [mobNames, setMobNames] = useState<string[]>(UNITY_MOB_NAMES);
+  const [mobNameInputs, setMobNameInputs] = useState<string[]>(UNITY_MOB_NAMES);
+  const [bossNames, setBossNames] = useState<string[]>(UNITY_BOSS_NAMES);
+  const [bossNameInputs, setBossNameInputs] = useState<string[]>(UNITY_BOSS_NAMES);
+  const [boyCharacterName, setBoyCharacterName] = useState("David");
+  const [boyCharacterNameInput, setBoyCharacterNameInput] = useState("David");
+  const [girlCharacterName, setGirlCharacterName] = useState("Clarisa");
+  const [girlCharacterNameInput, setGirlCharacterNameInput] = useState("Clarisa");
+  const [savingNames, setSavingNames] = useState(false);
+  const [namesError, setNamesError] = useState<string | null>(null);
+  const [namesSaved, setNamesSaved] = useState(false);
 
   const [apkDownloadUrl, setApkDownloadUrl] = useState("");
   const [apkUrlInput, setApkUrlInput] = useState("");
@@ -32,6 +51,26 @@ export default function RemoteConfigPage() {
       setApkDownloadUrl(typeof data.apkDownloadUrl === "string" ? data.apkDownloadUrl : "");
       setApkUrlInput(typeof data.apkDownloadUrl === "string" ? data.apkDownloadUrl : "");
       setApkDownloadEnabled(Boolean(data.apkDownloadEnabled));
+      const loadedBossNames = Array.isArray(data.bossNames) && data.bossNames.length === 10
+        ? data.bossNames.map((value: unknown) => typeof value === "string" ? value : "")
+        : UNITY_BOSS_NAMES;
+      const loadedMobNames = Array.isArray(data.mobNames) && data.mobNames.length === 10
+        ? data.mobNames.map((value: unknown, index: number) => typeof value === "string" ? value : UNITY_MOB_NAMES[index])
+        : UNITY_MOB_NAMES;
+      const loadedChase = Array.from({ length: 10 }, (_, index) => {
+        const value = data.mobChaseDistances?.[index];
+        return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100 ? String(value) : "";
+      });
+      setChaseDistances(loadedChase);
+      setChaseInputs(loadedChase);
+      setMobNames(loadedMobNames);
+      setMobNameInputs(loadedMobNames);
+      setBossNames(loadedBossNames);
+      setBossNameInputs(loadedBossNames);
+      setBoyCharacterName(typeof data.boyCharacterName === "string" ? data.boyCharacterName : "David");
+      setBoyCharacterNameInput(typeof data.boyCharacterName === "string" ? data.boyCharacterName : "David");
+      setGirlCharacterName(typeof data.girlCharacterName === "string" ? data.girlCharacterName : "Clarisa");
+      setGirlCharacterNameInput(typeof data.girlCharacterName === "string" ? data.girlCharacterName : "Clarisa");
       setLoadState("ready");
     }).catch((err) => {
       setError(err instanceof Error ? err.message : String(err));
@@ -68,6 +107,47 @@ export default function RemoteConfigPage() {
       setApkEnabledError(err instanceof Error ? err.message : String(err));
     } finally {
       setSavingApkEnabled(false);
+    }
+  }
+
+  async function handleSaveNames(e: FormEvent) {
+    e.preventDefault();
+    setSavingNames(true);
+    setNamesError(null);
+    setNamesSaved(false);
+    try {
+      const payload = {
+        mobChaseDistances: chaseInputs.map((value) => value.trim() === "" ? null : Number(value)),
+        mobNames: mobNameInputs.map((value) => value.trim()),
+        bossNames: bossNameInputs.map((value) => value.trim()),
+        boyCharacterName: boyCharacterNameInput.trim(),
+        girlCharacterName: girlCharacterNameInput.trim(),
+      };
+      const res = await fetch("/api/remote-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error ?? "Names could not be saved.");
+      const savedBossNames = Array.isArray(data.bossNames) ? data.bossNames : payload.bossNames;
+      const savedChase = (data.mobChaseDistances ?? payload.mobChaseDistances).map((value: number | null) => value === null ? "" : String(value));
+      setChaseDistances(savedChase);
+      setChaseInputs(savedChase);
+      const savedMobNames = Array.isArray(data.mobNames) ? data.mobNames : payload.mobNames;
+      setMobNames(savedMobNames);
+      setMobNameInputs(savedMobNames);
+      setBossNames(savedBossNames);
+      setBossNameInputs(savedBossNames);
+      setBoyCharacterName(data.boyCharacterName ?? payload.boyCharacterName);
+      setBoyCharacterNameInput(data.boyCharacterName ?? payload.boyCharacterName);
+      setGirlCharacterName(data.girlCharacterName ?? payload.girlCharacterName);
+      setGirlCharacterNameInput(data.girlCharacterName ?? payload.girlCharacterName);
+      setNamesSaved(true);
+    } catch (err) {
+      setNamesError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSavingNames(false);
     }
   }
 
@@ -135,15 +215,86 @@ export default function RemoteConfigPage() {
 
   return (
     <div className="space-y-7">
-      <header className="max-w-3xl"><p className="eyebrow">Live Operations</p><h1 className="page-title mt-2">Game flags</h1><p className="mt-4 text-base leading-7 text-stone-400">Control runtime behavior stored at <code className="rounded bg-white/5 px-1.5 py-1 text-sm text-stone-300">adminConfig/flags</code>.</p></header>
-      <div className="flex gap-3 rounded-2xl border border-emerald-300/15 bg-emerald-300/6 p-5 text-sm text-emerald-100/75"><span className="text-emerald-300" aria-hidden="true">✓</span><div><p className="font-bold text-emerald-200">Game integration live</p><p className="mt-1 leading-6"><code>AdminButtonGate.cs</code> reads this flag on each app launch/scene load (not real-time — a toggle here takes effect on a player&apos;s next launch, not instantly mid-session).</p></div></div>
+      <header className="max-w-3xl"><p className="eyebrow">Live Operations</p><h1 className="page-title mt-2">Game controls</h1><p className="mt-4 text-base leading-7 text-stone-400">Control runtime behavior and player-facing names stored at <code className="rounded bg-white/5 px-1.5 py-1 text-sm text-stone-300">adminConfig/flags</code>.</p></header>
+      <div className="flex gap-3 rounded-2xl border border-emerald-300/15 bg-emerald-300/6 p-5 text-sm text-emerald-100/75"><span className="text-emerald-300" aria-hidden="true">✓</span><div><p className="font-bold text-emerald-200">Game integration live</p><p className="mt-1 leading-6">Saved controls and names are delivered to running games through the live game service. Offline games keep their built-in names until they reconnect.</p></div></div>
+      <AboutCreditsEditor />
       {loadState === "loading" && <div className="game-panel flex items-center gap-3 rounded-2xl p-5 text-sm text-stone-400" role="status"><span className="size-4 animate-spin rounded-full border-2 border-emerald-300/25 border-t-emerald-300" />Loading current flag state...</div>}
       {error && <div className="rounded-2xl border border-red-400/20 bg-red-400/8 p-5 text-sm text-red-200" role="alert">{error}</div>}
       {loadState !== "loading" && (
         <div className="game-panel flex flex-col gap-6 rounded-2xl p-6 sm:flex-row sm:items-center sm:justify-between">
-          <div><div className="mb-3 flex items-center gap-2"><span className={`size-2 rounded-full ${showCheatButton ? "bg-emerald-400 shadow-[0_0_10px_#34d399]" : "bg-stone-600"}`} /><span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">{showCheatButton ? "Enabled" : "Disabled"}</span></div><h2 className="text-lg font-bold text-white">Show Cheat button in-game</h2><p className="mt-2 max-w-xl text-sm leading-6 text-stone-400">When disabled, the game should hide the Admin/Cheat button for every player.</p></div>
-          <button onClick={handleToggle} disabled={saving} className={`relative h-10 w-[4.5rem] shrink-0 rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${showCheatButton ? "border-emerald-300/30 bg-emerald-400" : "border-white/10 bg-stone-700"}`} aria-pressed={showCheatButton} aria-label="Show Cheat button in-game"><span className={`absolute left-1 top-1 h-8 w-8 rounded-full bg-white shadow-md transition-transform ${showCheatButton ? "translate-x-8" : "translate-x-0"}`} /></button>
+          <div><div className="mb-3 flex items-center gap-2"><span className={`size-2 rounded-full ${showCheatButton ? "bg-emerald-400 shadow-[0_0_10px_#34d399]" : "bg-stone-600"}`} /><span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Tester access {showCheatButton ? "enabled" : "disabled"}</span></div><h2 className="text-lg font-bold text-white">Tester Cheat button</h2><p className="mt-2 max-w-xl text-sm leading-6 text-stone-400">Turns the in-game Cheat button on or off for tester accounts. Regular player accounts never see it.</p></div>
+          <button onClick={handleToggle} disabled={saving} className={`relative h-10 w-[4.5rem] shrink-0 rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${showCheatButton ? "border-emerald-300/30 bg-emerald-400" : "border-white/10 bg-stone-700"}`} aria-pressed={showCheatButton} aria-label="Enable the in-game Cheat button for tester accounts"><span className={`absolute left-1 top-1 h-8 w-8 rounded-full bg-white shadow-md transition-transform ${showCheatButton ? "translate-x-8" : "translate-x-0"}`} /></button>
         </div>
+      )}
+      {loadState !== "loading" && (
+        <section className="game-panel rounded-2xl p-6" aria-labelledby="content-names-heading">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-amber-300">Player-facing content</p>
+              <h2 id="content-names-heading" className="mt-2 text-xl font-bold text-white">Mob settings and character names</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-400">Edit David and Clarisa in character selection, plus the regular mobs and boss in each arc. Current game names are filled in automatically.</p>
+            </div>
+            <span className="w-fit rounded-full border border-emerald-300/15 bg-emerald-300/8 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">Live in game</span>
+          </div>
+          <form onSubmit={handleSaveNames} className="mt-6">
+            <fieldset disabled={savingNames || loadState !== "ready"}>
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="block text-sm font-bold text-stone-200">
+                David&apos;s name
+                <span className="mt-1 block text-xs font-normal leading-5 text-stone-500">Shown on David&apos;s character-selection option and biography.</span>
+                <input type="text" value={boyCharacterNameInput} required minLength={2} maxLength={40} onChange={(e) => { setBoyCharacterNameInput(e.target.value); setNamesSaved(false); }} className="mt-3 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-amber-300/50 focus:outline-none" />
+              </label>
+              <label className="block text-sm font-bold text-stone-200">
+                Clarisa&apos;s name
+                <span className="mt-1 block text-xs font-normal leading-5 text-stone-500">Shown on Clarisa&apos;s character-selection option and biography.</span>
+                <input type="text" value={girlCharacterNameInput} required minLength={2} maxLength={40} onChange={(e) => { setGirlCharacterNameInput(e.target.value); setNamesSaved(false); }} className="mt-3 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-amber-300/50 focus:outline-none" />
+              </label>
+            </div>
+            <div className="mt-7 border-t border-white/7 pt-6">
+              <h3 className="text-base font-bold text-white">Mob settings by arc</h3>
+              <p className="mt-1 text-xs leading-5 text-stone-500">Actual game models used in each arc. One mob name applies to all the regular enemies pictured for that arc. Click a picture to enlarge it.</p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {mobNameInputs.map((value, index) => (
+                  <div key={index} className="rounded-xl border border-white/10 bg-black/15 p-3">
+                    <MobPreviewGallery arc={index + 1} kind="mob" />
+                    <label className="mt-3 block text-sm font-bold text-stone-200">
+                    Arc {index + 1} mob
+                    <input type="text" value={value} required minLength={2} maxLength={40} onChange={(e) => { const next = [...mobNameInputs]; next[index] = e.target.value; setMobNameInputs(next); setNamesSaved(false); }} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-amber-300/50 focus:outline-none" />
+                  </label>
+                    <label className="mt-3 block text-sm font-bold text-stone-200">
+                      Chase distance (metres)
+                      <input type="number" min={0} max={100} step="any" value={chaseInputs[index]} placeholder="Use game setting" onChange={(e) => { const next = [...chaseInputs]; next[index] = e.target.value; setChaseInputs(next); setNamesSaved(false); }} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-amber-300/50 focus:outline-none" />
+                      <span className="mt-1 block text-xs font-normal leading-5 text-stone-500">0-100 m. Blank restores each mob&apos;s game setting; 0 disables chasing. Applies to regular mobs in this arc.</span>
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="mt-7 border-t border-white/7 pt-6">
+              <h3 className="text-base font-bold text-white">Boss names by arc</h3>
+              <p className="mt-1 text-xs leading-5 text-stone-500">The actual boss model for each arc is shown below. Edit its name to change the boss health-bar label in game.</p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {bossNameInputs.map((value, index) => (
+                  <div key={index} className="rounded-xl border border-white/10 bg-black/15 p-3">
+                    <MobPreviewGallery arc={index + 1} kind="boss" />
+                    <label className="mt-3 block text-sm font-bold text-stone-200">
+                    Arc {index + 1} boss
+                    <input type="text" value={value} required minLength={2} maxLength={40} onChange={(e) => { const next = [...bossNameInputs]; next[index] = e.target.value; setBossNameInputs(next); setNamesSaved(false); }} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-amber-300/50 focus:outline-none" />
+                  </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <button type="submit" disabled={loadState !== "ready" || savingNames || (chaseInputs.every((value, index) => (value.trim() === "" ? "" : String(Number(value))) === chaseDistances[index]) && mobNameInputs.every((value, index) => value.trim() === mobNames[index]) && bossNameInputs.every((value, index) => value.trim() === bossNames[index]) && boyCharacterNameInput.trim() === boyCharacterName && girlCharacterNameInput.trim() === girlCharacterName)} className="rounded-xl bg-amber-300 px-5 py-2.5 text-sm font-extrabold text-[#172018] shadow-lg shadow-amber-950/20 hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-50">
+                {savingNames ? "Saving settings..." : "Save settings"}
+              </button>
+              {namesSaved && !namesError && <p className="text-sm font-bold text-emerald-300" role="status">Success — settings saved and sent to the game.</p>}
+              {namesError && <p className="text-sm text-red-300" role="alert">{namesError}</p>}
+            </div>
+            </fieldset>
+          </form>
+        </section>
       )}
       {loadState !== "loading" && (
         <div className="game-panel rounded-2xl p-6">

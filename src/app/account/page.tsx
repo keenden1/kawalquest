@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import PublicHeader from "@/components/PublicHeader";
+import PaymentHistory from "@/components/PaymentHistory";
 import { getSessionUser, isAdminRole } from "@/lib/auth";
 import { getAdminDb } from "@/lib/firebaseAdmin";
 
@@ -28,6 +30,10 @@ export default async function AccountPage() {
             <div className="bg-[#0a1711] p-6"><p className="text-[10px] font-bold uppercase tracking-wider text-stone-600">Role</p><p className="mt-2 font-bold capitalize text-stone-300">{user.role}</p></div>
             <div className="bg-[#0a1711] p-6"><p className="text-[10px] font-bold uppercase tracking-wider text-stone-600">Email</p><p className="mt-2 truncate text-sm font-bold text-stone-300" title={user.email ?? undefined}>{user.email ?? "Unavailable"}</p></div>
           </div>
+        </section>
+        <section className="game-panel mt-5 overflow-hidden rounded-2xl" aria-labelledby="payment-history">
+          <div className="border-b border-white/10 px-5 py-4"><h2 id="payment-history" className="font-bold text-white">Payment history</h2><p className="mt-1 text-xs text-stone-400">Your latest 50 confirmed purchases. Gold is applied when you next fully log in to the game.</p></div>
+          <Suspense fallback={<p role="status" className="px-5 py-8 text-sm text-stone-400">Loading payment history…</p>}><PaymentHistory uid={user.uid} /></Suspense>
         </section>
         {isAdminRole(user.role) && <div className="mt-5 flex items-center justify-between rounded-2xl border border-amber-300/15 bg-amber-300/6 p-5"><div><p className="font-bold text-amber-100">Administrative access detected</p><p className="mt-1 text-sm text-amber-100/60">Your role can enter the command center.</p></div><Link href="/admin" className="rounded-xl bg-amber-300 px-4 py-2.5 text-xs font-black text-[#172018]">Open admin →</Link></div>}
       </div>

@@ -12,9 +12,7 @@ function loadServiceAccount() {
 
   if (!projectId || !clientEmail || !privateKey) {
     throw new Error(
-      "Missing Firebase Admin credentials. Copy .env.local.example to .env.local and fill in " +
-        "FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY from your service " +
-        "account key JSON."
+      "Missing server authentication credentials. Configure the documented service-account settings in .env.local."
     );
   }
 

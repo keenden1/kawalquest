@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 export type CatalogItem = {
   id: string;
@@ -72,10 +73,10 @@ export default function ShopItemGrid({ items }: { items: CatalogItem[] }) {
                 onClick={() => item.imageUrl && setZoomed(item)}
                 disabled={!item.imageUrl}
                 aria-label={item.imageUrl ? `Zoom in on ${item.name}` : undefined}
-                className={`grid aspect-[4/3] w-full place-items-center overflow-hidden bg-gradient-to-br from-amber-300/10 to-emerald-400/5 ${item.imageUrl ? "cursor-zoom-in" : "cursor-default"}`}
+                className={`relative grid aspect-[4/3] w-full place-items-center overflow-hidden bg-gradient-to-br from-amber-300/10 to-emerald-400/5 ${item.imageUrl ? "cursor-zoom-in" : "cursor-default"}`}
               >
                 {item.imageUrl ? (
-                  <img src={item.imageUrl} alt={item.name} className={`size-full object-cover transition-transform duration-200 ${item.comingSoon ? "grayscale" : "hover:scale-105"}`} />
+                  <Image fill sizes="(max-width: 640px) 100vw, 33vw" src={item.imageUrl} alt={item.name} className={`object-cover transition-transform duration-200 ${item.comingSoon ? "grayscale" : "hover:scale-105"}`} />
                 ) : (
                   <span className="text-5xl text-amber-300/50">◆</span>
                 )}
@@ -99,7 +100,7 @@ export default function ShopItemGrid({ items }: { items: CatalogItem[] }) {
           onClick={() => setZoomed(null)}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-5 backdrop-blur-sm"
         >
-          <div className="relative max-h-[85vh] max-w-2xl" onClick={(event) => event.stopPropagation()}>
+          <div className="relative" onClick={(event) => event.stopPropagation()}>
             <button
               type="button"
               onClick={() => setZoomed(null)}
@@ -109,7 +110,9 @@ export default function ShopItemGrid({ items }: { items: CatalogItem[] }) {
             >
               ×
             </button>
-            <img src={zoomed.imageUrl} alt={zoomed.name} className="max-h-[85vh] w-full rounded-2xl border border-white/10 object-contain" />
+            <div className="relative h-[75vh] max-h-[720px] w-[90vw] max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+              <Image fill sizes="(max-width: 768px) 90vw, 672px" src={zoomed.imageUrl} alt={zoomed.name} className="object-contain" />
+            </div>
             <p className="mt-3 text-center text-sm font-bold uppercase tracking-widest text-amber-300">{zoomed.name}</p>
           </div>
         </div>

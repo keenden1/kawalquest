@@ -18,7 +18,7 @@ function friendlyResetError(error: unknown): string {
   if (code.includes("invalid-action-code")) return "This reset link is invalid or has already been used.";
   if (code.includes("user-disabled")) return "This account has been disabled.";
   if (code.includes("weak-password")) return "Use a stronger password with at least 8 characters.";
-  return error instanceof Error ? error.message : "Something went wrong. Please try again.";
+  return "Something went wrong. Please try again.";
 }
 
 export default function ResetPasswordForm({ oobCode }: { oobCode: string | null }) {
@@ -82,7 +82,7 @@ export default function ResetPasswordForm({ oobCode }: { oobCode: string | null 
       <div className="game-panel w-full max-w-md rounded-3xl p-6 sm:p-8">
         <p className="eyebrow">Link unavailable</p>
         <h1 className="mt-2 text-3xl font-black tracking-tight text-white">Reset link invalid</h1>
-        <p className="mt-2 text-sm leading-6 text-stone-500">{!configured ? "Firebase web authentication is not configured." : (verifyError ?? "This reset link is invalid or missing. Request a new one from the sign-in page.")}</p>
+        <p className="mt-2 text-sm leading-6 text-stone-500">{!configured ? "Web authentication is temporarily unavailable. Please contact an administrator." : (verifyError ?? "This reset link is invalid or missing. Request a new one from the sign-in page.")}</p>
         <Link href="/login" className="mt-6 block w-full rounded-xl border border-white/10 px-5 py-3.5 text-center text-sm font-black uppercase tracking-wider text-stone-200 hover:bg-white/8">Back to sign in</Link>
       </div>
     );

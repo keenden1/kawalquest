@@ -3,7 +3,7 @@ import Link from "next/link";
 const cards = [
   { href: "/admin/players", badge: "Leaderboard", title: "Player Roster", description: "Inspect adventurers, scores, and join dates synced from Firestore.", icon: "♜", accent: "text-emerald-300 bg-emerald-400/10 border-emerald-300/20" },
   { href: "/admin/shop", badge: "Market", title: "Shop Items", description: "Add and edit the weapons, gear, and collectibles sold on the Shop page.", icon: "⛁", accent: "text-rose-300 bg-rose-400/10 border-rose-300/20" },
-  { href: "/admin/remote-config", badge: "Live controls", title: "Game Flags", description: "Control runtime flags and safely stage upcoming game behavior.", icon: "⚑", accent: "text-amber-300 bg-amber-400/10 border-amber-300/20" },
+  { href: "/admin/remote-config", badge: "Live controls", title: "Game Controls", description: "Edit runtime flags plus the boss and selectable-character names shown in game.", icon: "⚑", accent: "text-amber-300 bg-amber-400/10 border-amber-300/20" },
   { href: "/admin/top-up", badge: "Coming soon", title: "Gold Treasury", description: "The future home of player top-ups and transaction history.", icon: "◆", accent: "text-sky-300 bg-sky-400/10 border-sky-300/20" },
 ];
 
@@ -34,7 +34,7 @@ export default function AdminDashboard() {
         </div>
       </section>
 
-      <aside className="flex flex-col gap-4 rounded-2xl border border-emerald-300/15 bg-emerald-300/6 p-5 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-start gap-3"><span className="mt-0.5 text-emerald-300" aria-hidden="true">✓</span><div><p className="text-sm font-bold text-emerald-100">Role-protected command center</p><p className="mt-1 text-sm text-emerald-100/60">This area requires a verified Firebase session with admin or superadmin access.</p></div></div><span className="shrink-0 rounded-full border border-emerald-300/15 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-300">Access enforced</span></aside>
+      <aside className="flex flex-col gap-4 rounded-2xl border border-emerald-300/15 bg-emerald-300/6 p-5 sm:flex-row sm:items-center sm:justify-between"><div className="flex items-start gap-3"><span className="mt-0.5 text-emerald-300" aria-hidden="true">✓</span><div><p className="text-sm font-bold text-emerald-100">Role-protected command center</p><p className="mt-1 text-sm text-emerald-100/60">This area requires a verified account with admin or superadmin access.</p></div></div><span className="shrink-0 rounded-full border border-emerald-300/15 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-300">Access enforced</span></aside>
     </div>
   );
 }

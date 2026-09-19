@@ -53,7 +53,7 @@ export default async function PlayersPage() {
         <div className="rounded-2xl border border-red-400/20 bg-red-400/8 p-5 text-sm text-red-200" role="alert">
           <p className="font-bold">Could not reach the player realm</p>
           <p className="mt-1 text-red-200/70">{error}</p>
-          <p className="mt-3 text-red-200/60">Check that <code>.env.local</code> contains valid Firebase service account credentials.</p>
+          <p className="mt-3 text-red-200/60">Check that the server has valid account-service credentials.</p>
         </div>
       )}
 

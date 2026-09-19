@@ -252,7 +252,10 @@ async function uploadIcon(bucket, itemId, spriteFile) {
   const file = bucket.file(storagePath);
   await file.save(buffer, {
     contentType: "image/png",
-    metadata: { metadata: { firebaseStorageDownloadTokens: token } },
+    metadata: {
+      cacheControl: "public, max-age=31536000, immutable",
+      metadata: { firebaseStorageDownloadTokens: token },
+    },
   });
 
   const bucketName = bucket.name;

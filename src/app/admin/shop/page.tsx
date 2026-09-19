@@ -49,9 +49,8 @@ export default async function AdminShopPage() {
         </p>
       </header>
       <div className="rounded-2xl border border-amber-300/15 bg-amber-300/6 p-5 text-sm leading-6 text-amber-100/70">
-        <strong className="text-amber-200">Icons are hosted, not uploaded here.</strong> Upload the item image to Firebase Storage
-        first (Console → Storage), then paste its public download URL into the Image URL field below — same as how the site&apos;s
-        own logo is hosted.
+        <strong className="text-amber-200">Images are stored and cached automatically.</strong> Choose an image while adding or editing an item.
+        The saved public URL remains available to the game and website.
       </div>
       <ShopManager initialItems={items} />
     </div>

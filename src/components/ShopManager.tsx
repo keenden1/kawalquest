@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Pagination from "@/components/Pagination";
 import SearchInput from "@/components/SearchInput";
 import { GEAR_TYPES, SHOP_CATEGORIES, WEAPON_TYPES, type ShopCategory, type ShopItem, type ShopItemInput } from "@/lib/shopItems";
@@ -66,6 +67,8 @@ export default function ShopManager({ initialItems }: { initialItems: ShopItem[]
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageUploadProgress, setImageUploadProgress] = useState(0);
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -95,6 +98,45 @@ export default function ShopManager({ initialItems }: { initialItems: ShopItem[]
     setEditingId(null);
     setDraft(EMPTY_DRAFT);
     setError(null);
+    setUploadingImage(false);
+    setImageUploadProgress(0);
+  }
+
+  async function uploadImage(file: File) {
+    setUploadingImage(true);
+    setImageUploadProgress(0);
+    setError(null);
+    try {
+      const presignResponse = await fetch("/api/admin/image-upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileName: file.name, contentType: file.type, size: file.size }),
+      });
+      const presign = await presignResponse.json();
+      if (!presignResponse.ok) throw new Error(presign.error ?? "Unable to prepare image upload.");
+
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("PUT", presign.uploadUrl);
+        xhr.setRequestHeader("Content-Type", presign.contentType);
+        xhr.setRequestHeader("Cache-Control", presign.cacheControl);
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) setImageUploadProgress(Math.round((event.loaded / event.total) * 100));
+        };
+        xhr.onload = () => xhr.status >= 200 && xhr.status < 300
+          ? resolve()
+          : reject(new Error(`Image storage upload failed (status ${xhr.status}).`));
+        xhr.onerror = () => reject(new Error("Network error while uploading the image."));
+        xhr.send(file);
+      });
+
+      updateDraft("imageUrl", presign.publicUrl);
+      setImageUploadProgress(100);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to upload this image.");
+    } finally {
+      setUploadingImage(false);
+    }
   }
 
   function updateDraft<K extends keyof ShopItemInput>(key: K, value: ShopItemInput[K]) {
@@ -184,7 +226,7 @@ export default function ShopManager({ initialItems }: { initialItems: ShopItem[]
                 <tr key={item.id} className="hover:bg-white/3">
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      {item.imageUrl ? <img src={item.imageUrl} alt="" className="size-9 shrink-0 rounded-lg border border-white/10 object-cover" /> : <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-amber-300/60">◆</span>}
+                      {item.imageUrl ? <Image src={item.imageUrl} width={36} height={36} sizes="36px" alt="" className="size-9 shrink-0 rounded-lg border border-white/10 object-cover" /> : <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-amber-300/60">◆</span>}
                       <p className="font-bold text-stone-200">{item.name}</p>
                     </div>
                   </td>
@@ -244,7 +286,27 @@ export default function ShopManager({ initialItems }: { initialItems: ShopItem[]
                 Coming Soon (shown on the site, not purchasable in-game)
               </label>
 
-              <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 md:col-span-2">Image URL (Firebase Storage download link)<input value={draft.imageUrl} onChange={(e) => updateDraft("imageUrl", e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm normal-case tracking-normal text-white" placeholder="https://firebasestorage.googleapis.com/..." /></label>
+              <div className="rounded-xl border border-white/8 bg-white/3 p-4 md:col-span-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-stone-500">Image storage</p>
+                <p className="mt-1 text-[11px] leading-5 text-stone-600">Upload to cached Cloudflare storage. JPG, PNG, WebP, or GIF up to 8 MB.</p>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <label className={`rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-bold text-white hover:bg-white/10 ${uploadingImage ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
+                    {uploadingImage ? `Uploading ${imageUploadProgress}%` : "Choose image"}
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={uploadingImage} className="hidden" onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; if (file) uploadImage(file); }} />
+                  </label>
+                  {draft.imageUrl && (
+                    <span className="text-xs font-bold text-emerald-300" role="status">
+                      {imageUploadProgress === 100 ? "Image uploaded successfully and cached." : "Stored image ready."}
+                    </span>
+                  )}
+                </div>
+                {draft.imageUrl && (
+                  <div className="relative mt-4 h-36 w-full overflow-hidden rounded-xl border border-white/10 bg-black/20">
+                    <Image fill sizes="(max-width: 768px) 100vw, 672px" src={draft.imageUrl} alt="Item preview" className="object-contain" />
+                  </div>
+                )}
+                <label className="mt-4 block text-[10px] font-bold uppercase tracking-wider text-stone-600">Stored image URL<input value={draft.imageUrl} onChange={(e) => updateDraft("imageUrl", e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm normal-case tracking-normal text-white" placeholder="Upload an image or paste a public image URL" /></label>
+              </div>
 
               <label className="block text-xs font-bold uppercase tracking-wider text-stone-500 md:col-span-2">Description (English)<textarea value={draft.descriptionEN} onChange={(e) => updateDraft("descriptionEN", e.target.value)} rows={2} className="mt-2 w-full rounded-xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm normal-case tracking-normal text-white" /></label>
 

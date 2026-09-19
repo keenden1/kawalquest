@@ -21,7 +21,7 @@ function friendlyAuthError(error: unknown): string {
   if (code.includes("weak-password")) return "Use a stronger password with at least 8 characters.";
   if (code.includes("invalid-email")) return "Enter a valid email address.";
   if (code.includes("too-many-requests")) return "Too many attempts. Please wait and try again.";
-  return error instanceof Error ? error.message : "Authentication failed. Please try again.";
+  return "Authentication failed. Please try again.";
 }
 
 function resetCooldownKey(email: string): string | null {
@@ -172,7 +172,7 @@ export default function AuthForm() {
         {(["login", "register"] as const).map((item) => <button key={item} type="button" onClick={() => switchMode(item)} className={`rounded-lg px-3 py-2.5 text-sm font-bold capitalize ${mode === item ? "bg-emerald-400/15 text-emerald-300" : "text-stone-500 hover:text-stone-300"}`} role="tab" aria-selected={mode === item}>{item === "login" ? "Sign in" : "Create account"}</button>)}
       </div>
       <div className="mt-7"><p className="eyebrow">{mode === "login" ? "Welcome back" : "Join the realm"}</p><h1 className="mt-2 text-3xl font-black tracking-tight text-white">{mode === "login" ? "Continue your quest" : "Become a Kawal"}</h1><p className="mt-2 text-sm leading-6 text-stone-500">{mode === "login" ? "Sign in to access your player account." : "Every new account begins with the player role."}</p></div>
-      {!configured && <div className="mt-5 rounded-xl border border-amber-300/20 bg-amber-300/8 p-3 text-xs leading-5 text-amber-200" role="alert">Firebase web authentication is not configured. Add the documented <code>NEXT_PUBLIC_FIREBASE_*</code> values to <code>.env.local</code>.</div>}
+      {!configured && <div className="mt-5 rounded-xl border border-amber-300/20 bg-amber-300/8 p-3 text-xs leading-5 text-amber-200" role="alert">Web authentication is temporarily unavailable. Please contact an administrator.</div>}
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         {mode === "register" && (
           <label className="block text-xs font-bold uppercase tracking-wider text-stone-500">

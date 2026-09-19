@@ -66,6 +66,9 @@ export async function POST(request: Request) {
         );
         transaction.create(receiptRef, {
           packageId: selectedPackage.id,
+          packageName: selectedPackage.name,
+          paidAmount: typeof payload.order?.amount === "string" && /^\d+(\.\d+)?$/.test(payload.order.amount) ? payload.order.amount : null,
+          currency: typeof payload.order?.currency === "string" && /^[A-Z]{3}$/.test(payload.order.currency) ? payload.order.currency : null,
           gold: selectedPackage.gold,
           status: "credited_pending_sync",
           createdAt: FieldValue.serverTimestamp(),
@@ -96,6 +99,7 @@ export async function POST(request: Request) {
           await playerRef.update({ pendingGoldCredits: FieldValue.arrayRemove(stillPending) });
           await receiptRef.update({ status: "refunded" });
         } else {
+          await receiptRef.update({ status: "refund_pending_reconciliation" });
           console.warn(`xsolla webhook: refund for ${transactionId} but credit already synced to Unity -- needs manual reconciliation for uid ${uid}`);
         }
       }
@@ -110,7 +114,7 @@ export async function POST(request: Request) {
 type XsollaWebhookPayload = {
   notification_type?: string;
   user?: { id?: string | { value?: string }; external_id?: string };
-  order?: { id?: string | number; mode?: string };
+  order?: { id?: string | number; mode?: string; amount?: string; currency?: string };
   items?: Array<{ sku?: string; quantity?: number }>;
   transaction?: { id?: string | number };
   purchase?: {

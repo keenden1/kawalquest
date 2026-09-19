@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import PublicHeader from "@/components/PublicHeader";
 import { getSessionUser } from "@/lib/auth";
@@ -22,8 +23,7 @@ const LOCAL_ITEM_IMAGES: Record<string, string> = {
 
 function ItemIcon({ item, size = "size-12" }: { item: ItemDataJson; size?: string }) {
   return item.ImageUrl ? (
-    // eslint-disable-next-line @next/next/no-img-element -- arbitrary Firebase Storage URL, not a fixed local asset set
-    <img src={item.ImageUrl} alt="" className={`${size} shrink-0 rounded-xl border border-white/10 bg-black/20 object-contain p-1`} />
+    <Image src={item.ImageUrl} width={96} height={96} sizes="96px" alt="" className={`${size} shrink-0 rounded-xl border border-white/10 bg-black/20 object-contain p-1`} />
   ) : (
     <span className={`grid ${size} shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-amber-300/50`}>◆</span>
   );
@@ -156,10 +156,9 @@ export default async function InventoryPage() {
         ) : (
           <div className="mt-9 grid items-start gap-8 lg:grid-cols-[300px_minmax(0,1fr)]">
             <aside className="game-panel h-fit rounded-3xl p-5 lg:sticky lg:top-24">
-              <div className="aspect-[3/4] w-full overflow-hidden rounded-2xl bg-gradient-to-b from-amber-300/10 to-emerald-400/5">
+              <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-gradient-to-b from-amber-300/10 to-emerald-400/5">
                 {CHARACTER_PORTRAIT[save.isBoy ? "boy" : "girl"] ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- hosted portrait, not a fixed local asset
-                  <img src={CHARACTER_PORTRAIT[save.isBoy ? "boy" : "girl"]} alt={save.isBoy ? "Boy character" : "Girl character"} className="size-full object-cover object-top" />
+                  <Image fill sizes="(max-width: 1024px) 100vw, 300px" src={CHARACTER_PORTRAIT[save.isBoy ? "boy" : "girl"]!} alt={save.isBoy ? "Boy character" : "Girl character"} className="object-cover object-top" />
                 ) : (
                   <div className="grid size-full place-items-center text-6xl text-amber-300/30">◆</div>
                 )}

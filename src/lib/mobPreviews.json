@@ -1,0 +1,338 @@
+[
+  {
+    "arc": 1,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Wolf.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 1/Enemy.asset",
+    "image": "/enemies/mob-wolf.png",
+    "model": "Wolf"
+  },
+  {
+    "arc": 1,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Goblin.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 1/Enemy.asset",
+    "image": "/enemies/mob-goblin.png",
+    "model": "Goblin"
+  },
+  {
+    "arc": 1,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Giant troll.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 1/Enemy.asset",
+    "image": "/enemies/mob-giant-troll.png",
+    "model": "Giant troll"
+  },
+  {
+    "arc": 1,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Hammer Goblin.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 1/Enemy.asset",
+    "image": "/enemies/mob-hammer-goblin.png",
+    "model": "Hammer Goblin"
+  },
+  {
+    "arc": 1,
+    "kind": "boss",
+    "prefab": "Assets/Prefabs/boss/Boss 1-1.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 1/boss sample.asset",
+    "image": "/enemies/boss-arc-1.png",
+    "model": "Boss 1-1"
+  },
+  {
+    "arc": 2,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Hammer Goblin.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 2/Enemy 1.asset",
+    "image": "/enemies/mob-hammer-goblin.png",
+    "model": "Hammer Goblin"
+  },
+  {
+    "arc": 2,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Wolf.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 2/Enemy 1.asset",
+    "image": "/enemies/mob-wolf.png",
+    "model": "Wolf"
+  },
+  {
+    "arc": 2,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Goblin.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 2/Enemy 1.asset",
+    "image": "/enemies/mob-goblin.png",
+    "model": "Goblin"
+  },
+  {
+    "arc": 2,
+    "kind": "boss",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/boss 2-3.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 2/2-3.asset",
+    "image": "/enemies/boss-arc-2.png",
+    "model": "boss 2-3"
+  },
+  {
+    "arc": 3,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Wolf.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 3/Enemy2.asset",
+    "image": "/enemies/mob-wolf.png",
+    "model": "Wolf"
+  },
+  {
+    "arc": 3,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Giant troll.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 3/Enemy2.asset",
+    "image": "/enemies/mob-giant-troll.png",
+    "model": "Giant troll"
+  },
+  {
+    "arc": 3,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Hammer Goblin.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 3/Enemy2.asset",
+    "image": "/enemies/mob-hammer-goblin.png",
+    "model": "Hammer Goblin"
+  },
+  {
+    "arc": 3,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Goblin.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 3/Enemy2.asset",
+    "image": "/enemies/mob-goblin.png",
+    "model": "Goblin"
+  },
+  {
+    "arc": 3,
+    "kind": "boss",
+    "prefab": "Assets/Scripts/SO/Enemy/level 3/3-3 boss.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 3/Boss 3-3.asset",
+    "image": "/enemies/boss-arc-3.png",
+    "model": "3-3 boss"
+  },
+  {
+    "arc": 4,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Goblin.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 4/Enemy3.asset",
+    "image": "/enemies/mob-goblin.png",
+    "model": "Goblin"
+  },
+  {
+    "arc": 4,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Giant troll.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 4/Enemy3.asset",
+    "image": "/enemies/mob-giant-troll.png",
+    "model": "Giant troll"
+  },
+  {
+    "arc": 4,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Hammer Goblin.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 4/Enemy3.asset",
+    "image": "/enemies/mob-hammer-goblin.png",
+    "model": "Hammer Goblin"
+  },
+  {
+    "arc": 4,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Wolf.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 4/Enemy3.asset",
+    "image": "/enemies/mob-wolf.png",
+    "model": "Wolf"
+  },
+  {
+    "arc": 4,
+    "kind": "boss",
+    "prefab": "Assets/Scripts/SO/Enemy/level 4/3-3 boss.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 4/Boss 4-3.asset",
+    "image": "/enemies/boss-arc-4.png",
+    "model": "3-3 boss"
+  },
+  {
+    "arc": 5,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Goblin.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 5/Enemy4.asset",
+    "image": "/enemies/mob-goblin.png",
+    "model": "Goblin"
+  },
+  {
+    "arc": 5,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Hammer Goblin.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 5/Enemy4.asset",
+    "image": "/enemies/mob-hammer-goblin.png",
+    "model": "Hammer Goblin"
+  },
+  {
+    "arc": 5,
+    "kind": "boss",
+    "prefab": "Assets/Scripts/SO/Enemy/level 5/3-3 boss.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 5/Boss 5-3.asset",
+    "image": "/enemies/boss-arc-5.png",
+    "model": "3-3 boss"
+  },
+  {
+    "arc": 6,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Giant troll.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 6/Enemy5.asset",
+    "image": "/enemies/mob-giant-troll.png",
+    "model": "Giant troll"
+  },
+  {
+    "arc": 6,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Wolf.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 6/Enemy5.asset",
+    "image": "/enemies/mob-wolf.png",
+    "model": "Wolf"
+  },
+  {
+    "arc": 6,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Goblin.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 6/Enemy5.asset",
+    "image": "/enemies/mob-goblin.png",
+    "model": "Goblin"
+  },
+  {
+    "arc": 6,
+    "kind": "boss",
+    "prefab": "Assets/Scripts/SO/Enemy/level 6/3-3 boss.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 6/Boss 6-3.asset",
+    "image": "/enemies/boss-arc-6.png",
+    "model": "3-3 boss"
+  },
+  {
+    "arc": 7,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Goblin.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 7/Enemy6.asset",
+    "image": "/enemies/mob-goblin.png",
+    "model": "Goblin"
+  },
+  {
+    "arc": 7,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Wolf.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 7/Enemy6.asset",
+    "image": "/enemies/mob-wolf.png",
+    "model": "Wolf"
+  },
+  {
+    "arc": 7,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Hammer Goblin.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 7/Enemy6.asset",
+    "image": "/enemies/mob-hammer-goblin.png",
+    "model": "Hammer Goblin"
+  },
+  {
+    "arc": 7,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Giant troll.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 7/Enemy6.asset",
+    "image": "/enemies/mob-giant-troll.png",
+    "model": "Giant troll"
+  },
+  {
+    "arc": 7,
+    "kind": "boss",
+    "prefab": "Assets/Scripts/SO/Enemy/level 7/3-3 boss.prefab",
+    "asset": "Assets/Scripts/SO/Enemy/level 7/Boss 7-3.asset",
+    "image": "/enemies/boss-arc-7.png",
+    "model": "3-3 boss"
+  },
+  {
+    "arc": 8,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Goblin.prefab",
+    "asset": "Assets/Scripts/SO/Arc8/Arc 8 Enemy.asset",
+    "image": "/enemies/mob-goblin.png",
+    "model": "Goblin"
+  },
+  {
+    "arc": 8,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Giant troll.prefab",
+    "asset": "Assets/Scripts/SO/Arc8/Arc 8 Enemy.asset",
+    "image": "/enemies/mob-giant-troll.png",
+    "model": "Giant troll"
+  },
+  {
+    "arc": 8,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Hammer Goblin.prefab",
+    "asset": "Assets/Scripts/SO/Arc8/Arc 8 Enemy.asset",
+    "image": "/enemies/mob-hammer-goblin.png",
+    "model": "Hammer Goblin"
+  },
+  {
+    "arc": 8,
+    "kind": "boss",
+    "prefab": "Assets/Scripts/SO/Arc8/Bantay ng Lagim.prefab",
+    "asset": "Assets/Scripts/SO/Arc8/Boss 8-3.asset",
+    "image": "/enemies/boss-arc-8.png",
+    "model": "Bantay ng Lagim"
+  },
+  {
+    "arc": 9,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Wolf.prefab",
+    "asset": "Assets/Scripts/SO/Arc9/Arc 9 Enemy.asset",
+    "image": "/enemies/mob-wolf.png",
+    "model": "Wolf"
+  },
+  {
+    "arc": 9,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Goblin.prefab",
+    "asset": "Assets/Scripts/SO/Arc9/Arc 9 Enemy.asset",
+    "image": "/enemies/mob-goblin.png",
+    "model": "Goblin"
+  },
+  {
+    "arc": 9,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Giant troll.prefab",
+    "asset": "Assets/Scripts/SO/Arc9/Arc 9 Enemy.asset",
+    "image": "/enemies/mob-giant-troll.png",
+    "model": "Giant troll"
+  },
+  {
+    "arc": 9,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Hammer Goblin.prefab",
+    "asset": "Assets/Scripts/SO/Arc9/Arc 9 Enemy.asset",
+    "image": "/enemies/mob-hammer-goblin.png",
+    "model": "Hammer Goblin"
+  },
+  {
+    "arc": 9,
+    "kind": "boss",
+    "prefab": "Assets/Scripts/SO/Arc9/Halimaw ng Dilim.prefab",
+    "asset": "Assets/Scripts/SO/Arc9/Boss 9-3.asset",
+    "image": "/enemies/boss-arc-9.png",
+    "model": "Halimaw ng Dilim"
+  },
+  {
+    "arc": 10,
+    "kind": "mob",
+    "prefab": "Assets/Scripts/SO/Enemy/enemy models/Goblin.prefab",
+    "asset": "Assets/Scripts/SO/Arc10/Arc 10 Enemy.asset",
+    "image": "/enemies/mob-goblin.png",
+    "model": "Goblin"
+  },
+  {
+    "arc": 10,
+    "kind": "boss",
+    "prefab": "Assets/Scripts/SO/Arc10/Bantay ng Pighati.prefab",
+    "asset": "Assets/Scripts/SO/Arc10/Boss 10-3.asset",
+    "image": "/enemies/boss-arc-10.png",
+    "model": "Bantay ng Pighati"
+  }
+]
