@@ -19,6 +19,7 @@ function harness(role = 'admin', data = {}) {
   const writes = [];
   const api = load('src/app/api/remote-config/route.ts', {
     '@/lib/contentNames': defaults,
+    '@/lib/aboutDefaults.json': { default: require('../src/lib/aboutDefaults.json') },
     'next/server': { NextResponse: { json: (body, init = {}) => ({ body, status: init.status || 200 }) } },
     '@/lib/auth': { getSessionUser: async () => role ? { role } : null, isAdminRole: role => ['admin', 'superadmin'].includes(role) },
     '@/lib/firebaseAdmin': { getAdminDb: () => ({ collection: () => ({ doc: () => ({
@@ -50,4 +51,52 @@ test('invalid credits never write', async () => {
     assert.equal((await h.post({aboutCredits: value})).status, 400);
     assert.equal(h.writes.length, 0);
   }
+});
+
+test('About text loads by language, saves with credits, and clears to built-in defaults', async () => {
+  const h = harness('superadmin', { aboutTextEnglish: 'English', aboutTextFilipino: 'Filipino', aboutCredits: 'Team' });
+  const loaded = (await h.api.GET()).body;
+  assert.equal(loaded.aboutTextEnglish, 'English');
+  assert.equal(loaded.aboutTextFilipino, 'Filipino');
+  assert.equal((await harness().api.GET()).body.aboutTextEnglish, require('../src/lib/aboutDefaults.json').aboutTextEnglish);
+  const result = await h.post({ aboutTextEnglish: ' About\r\nHow to play ', aboutTextFilipino: ' Tungkol sa laro ', aboutCredits: 'Team' });
+  assert.equal(result.status, 200);
+  assert.deepEqual(h.writes[0], {update: {aboutTextEnglish: 'About\nHow to play', aboutTextFilipino: 'Tungkol sa laro', aboutCredits: 'Team'}, options: {merge:true}});
+  assert.equal((await h.post({aboutTextEnglish: ''})).status, 200);
+  assert.deepEqual(h.writes[1].update, {aboutTextEnglish: ''});
+});
+
+test('invalid About text rejects the whole update in either language', async () => {
+  for (const field of ['aboutTextEnglish', 'aboutTextFilipino']) {
+    for (const value of [null, 4, [], {}, 'x'.repeat(8001), '<b>About</b>', 'About\u0000']) {
+      const h = harness();
+      assert.equal((await h.post({[field]: value, aboutCredits: 'Unsaved credits'})).status, 400);
+      assert.equal(h.writes.length, 0);
+    }
+    const h = harness();
+    assert.equal((await h.post({[field]: 'x'.repeat(8000)})).status, 200);
+  }
+});
+
+test('About text editing enforces authentication and admin role', async () => {
+  for (const role of [null, 'user', 'tester']) {
+    const h = harness(role);
+    assert.equal((await h.post({aboutTextEnglish: 'About', aboutTextFilipino: 'Tungkol'})).status, role ? 403 : 401);
+    assert.equal(h.writes.length, 0);
+  }
+});
+
+test('editor receives the effective built-in text for missing or blank language fields', async () => {
+  const expected = require('../src/lib/aboutDefaults.json');
+  for (const data of [{}, {aboutTextEnglish: '', aboutTextFilipino: '  '}]) {
+    const result = (await harness('admin', data).api.GET()).body;
+    assert.equal(result.aboutTextEnglish, expected.aboutTextEnglish);
+    assert.equal(result.aboutTextFilipino, expected.aboutTextFilipino);
+    assert.match(result.aboutTextEnglish, /Learn through adventure/);
+    assert.match(result.aboutTextEnglish, /How to play/);
+    assert.match(result.aboutTextFilipino, /Paano maglaro/);
+  }
+  const result = (await harness('admin', {aboutTextEnglish: 'My edited About'}).api.GET()).body;
+  assert.equal(result.aboutTextEnglish, 'My edited About');
+  assert.equal(result.aboutTextFilipino, expected.aboutTextFilipino);
 });

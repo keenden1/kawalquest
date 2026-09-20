@@ -6,11 +6,13 @@ import catalog from "@/lib/mobPreviews.json";
 
 type Preview = (typeof catalog)[number];
 
-export default function MobPreviewGallery({ arc, kind }: { arc: number; kind: "mob" | "boss" }) {
-  const previews = catalog.filter((entry) => entry.arc === arc && entry.kind === kind);
+export default function MobPreviewGallery({ arc, kind, model }: { arc?: number; kind: "mob" | "boss"; model?: string }) {
+  const previews = model
+    ? catalog.filter((entry) => entry.kind === kind && entry.model === model).slice(0, 1)
+    : catalog.filter((entry) => entry.arc === arc && entry.kind === kind);
   const [selected, setSelected] = useState<Preview | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
-  const title = `Arc ${arc} ${kind === "boss" ? "boss" : "mob"}`;
+  const title = model ?? `Arc ${arc} ${kind === "boss" ? "boss" : "mob"}`;
 
   function close() {
     dialog.current?.close();
@@ -30,7 +32,7 @@ export default function MobPreviewGallery({ arc, kind }: { arc: number; kind: "m
           >
             <Image src={preview.image} alt={`${title} in-game model${kind === "mob" ? `: ${preview.model}` : ""}`} width={512} height={512}
               sizes={previews.length > 1 ? "(min-width: 1280px) 160px, 40vw" : "(min-width: 1280px) 320px, 80vw"}
-              className="aspect-square w-full object-contain" />
+              className="h-40 w-full object-contain" />
             <span className="block px-2 py-1.5 text-center text-xs text-stone-300 group-hover:text-amber-200">
               {kind === "mob" ? preview.model : "View boss"}
             </span>

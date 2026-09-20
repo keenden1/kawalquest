@@ -1,4 +1,5 @@
-import { UNITY_BOSS_NAMES, UNITY_MOB_NAMES } from "@/lib/contentNames";
+import { UNITY_BOSS_NAMES, UNITY_MOB_NAMES, MOB_TYPES } from "@/lib/contentNames";
+import aboutDefaults from "@/lib/aboutDefaults.json";
 import { NextResponse } from "next/server";
 import { getAdminDb } from "@/lib/firebaseAdmin";
 import { getSessionUser, isAdminRole } from "@/lib/auth";
@@ -16,12 +17,18 @@ export async function GET() {
     const data = snap.exists ? snap.data() : {};
     return NextResponse.json({
       aboutCredits: typeof data?.aboutCredits === "string" ? data.aboutCredits : "",
+      aboutTextEnglish: typeof data?.aboutTextEnglish === "string" && data.aboutTextEnglish.trim() ? data.aboutTextEnglish : aboutDefaults.aboutTextEnglish,
+      aboutTextFilipino: typeof data?.aboutTextFilipino === "string" && data.aboutTextFilipino.trim() ? data.aboutTextFilipino : aboutDefaults.aboutTextFilipino,
       showCheatButton: Boolean(data?.showCheatButton ?? false),
       apkDownloadUrl: typeof data?.apkDownloadUrl === "string" ? data.apkDownloadUrl : "",
       apkDownloadEnabled: Boolean(data?.apkDownloadEnabled ?? false),
       mobChaseDistances: Array.from({ length: 10 }, (_, index) => {
         const value = data?.[`mobChaseDistanceArc${index + 1}`];
         return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100 ? value : null;
+      }),
+      mobTypeNames: MOB_TYPES.map(({ key, name }) => {
+        const value = data?.[`mobNameType${key}`];
+        return typeof value === "string" && value.trim() ? value : name;
       }),
       mobNames: UNITY_MOB_NAMES.map((fallback, index) => {
         const value = data?.[`mobNameArc${index + 1}`];
@@ -52,12 +59,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Configuration must be an object." }, { status: 400 });
     const update: {
       aboutCredits?: string;
+      aboutTextEnglish?: string;
+      aboutTextFilipino?: string;
       showCheatButton?: boolean;
       apkDownloadUrl?: string;
       apkDownloadEnabled?: boolean;
       boyCharacterName?: string;
       girlCharacterName?: string;
       [key: `bossNameArc${number}`]: string | undefined;
+      [key: `mobNameType${string}`]: string | undefined;
       [key: `mobNameArc${number}`]: string | undefined;
       [key: `mobChaseDistanceArc${number}`]: number | null | undefined;
     } = {};
@@ -97,6 +107,18 @@ export async function POST(request: Request) {
         );
       }
       update.apkDownloadUrl = trimmed;
+    }
+
+    for (const field of ["aboutTextEnglish", "aboutTextFilipino"] as const) {
+      if (!(field in body)) continue;
+      if (typeof body[field] !== "string" || body[field].length > 8000) {
+        return NextResponse.json({ error: "About text must be text of 8,000 characters or fewer per language." }, { status: 400 });
+      }
+      const value = body[field].replace(/\r\n?/g, "\n").trim();
+      if (/[<>\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/u.test(value)) {
+        return NextResponse.json({ error: "About text must be plain text without markup or control characters." }, { status: 400 });
+      }
+      update[field] = value;
     }
 
     if ("aboutCredits" in body) {
@@ -185,6 +207,32 @@ export async function POST(request: Request) {
       }
     }
 
+    let savedMobTypeNames: string[] | undefined;
+    if ("mobTypeNames" in body) {
+      if (!Array.isArray(body.mobTypeNames) || body.mobTypeNames.length !== MOB_TYPES.length) {
+        return NextResponse.json({ error: "Mob names must contain one entry per type: Wolf, Goblin, Hammer Goblin, Giant Troll." }, { status: 400 });
+      }
+      savedMobTypeNames = [];
+      for (let index = 0; index < MOB_TYPES.length; index++) {
+        const rawValue = body.mobTypeNames[index];
+        if (typeof rawValue !== "string") {
+          return NextResponse.json({ error: `${MOB_TYPES[index].name} name must be text.` }, { status: 400 });
+        }
+        const value = rawValue.trim();
+        if (value.length < 2) {
+          return NextResponse.json({ error: `${MOB_TYPES[index].name} name must be at least 2 characters.` }, { status: 400 });
+        }
+        if (value.length > 40) {
+          return NextResponse.json({ error: `${MOB_TYPES[index].name} name must be 40 characters or fewer.` }, { status: 400 });
+        }
+        if (/[<>\u0000-\u001F\u007F]/u.test(value)) {
+          return NextResponse.json({ error: `${MOB_TYPES[index].name} name contains unsupported characters.` }, { status: 400 });
+        }
+        update[`mobNameType${MOB_TYPES[index].key}`] = value;
+        savedMobTypeNames.push(value);
+      }
+    }
+
     let savedMobChaseDistances: (number | null)[] | undefined;
     if ("mobChaseDistances" in body) {
       if (!Array.isArray(body.mobChaseDistances) || body.mobChaseDistances.length !== 10) {
@@ -211,7 +259,7 @@ export async function POST(request: Request) {
       .doc(CONFIG_DOC_PATH[1])
       .set(update, { merge: true });
 
-    return NextResponse.json({ ...update, bossNames: savedBossNames, mobNames: savedMobNames, mobChaseDistances: savedMobChaseDistances });
+    return NextResponse.json({ ...update, bossNames: savedBossNames, mobTypeNames: savedMobTypeNames, mobNames: savedMobNames, mobChaseDistances: savedMobChaseDistances });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : String(err) },

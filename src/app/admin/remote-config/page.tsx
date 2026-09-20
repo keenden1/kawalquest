@@ -4,12 +4,24 @@ import { useEffect, useState, type FormEvent } from "react";
 
 import AboutCreditsEditor from "@/components/AboutCreditsEditor";
 import MobPreviewGallery from "@/components/MobPreviewGallery";
-import { UNITY_BOSS_NAMES, UNITY_MOB_NAMES } from "@/lib/contentNames";
+import { UNITY_BOSS_NAMES, MOB_TYPES } from "@/lib/contentNames";
 
 type LoadState = "loading" | "ready" | "error";
+const sections = [
+  { id: "about", label: "About & credits" },
+  { id: "characters", label: "Characters" },
+  { id: "mobs", label: "Mobs" },
+  { id: "bosses", label: "Bosses" },
+  { id: "chase", label: "Chase distance" },
+  { id: "testing", label: "Tester access" },
+  { id: "downloads", label: "Downloads" },
+] as const;
+type Section = (typeof sections)[number]["id"];
 
 
 export default function RemoteConfigPage() {
+  const [section, setSection] = useState<Section>("about");
+  const [selectedArc, setSelectedArc] = useState(0);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [showCheatButton, setShowCheatButton] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -17,8 +29,8 @@ export default function RemoteConfigPage() {
 
   const [chaseDistances, setChaseDistances] = useState<string[]>(Array(10).fill(""));
   const [chaseInputs, setChaseInputs] = useState<string[]>(Array(10).fill(""));
-  const [mobNames, setMobNames] = useState<string[]>(UNITY_MOB_NAMES);
-  const [mobNameInputs, setMobNameInputs] = useState<string[]>(UNITY_MOB_NAMES);
+  const [mobNames, setMobNames] = useState<string[]>(MOB_TYPES.map((type) => type.name));
+  const [mobNameInputs, setMobNameInputs] = useState<string[]>(MOB_TYPES.map((type) => type.name));
   const [bossNames, setBossNames] = useState<string[]>(UNITY_BOSS_NAMES);
   const [bossNameInputs, setBossNameInputs] = useState<string[]>(UNITY_BOSS_NAMES);
   const [boyCharacterName, setBoyCharacterName] = useState("David");
@@ -54,9 +66,9 @@ export default function RemoteConfigPage() {
       const loadedBossNames = Array.isArray(data.bossNames) && data.bossNames.length === 10
         ? data.bossNames.map((value: unknown) => typeof value === "string" ? value : "")
         : UNITY_BOSS_NAMES;
-      const loadedMobNames = Array.isArray(data.mobNames) && data.mobNames.length === 10
-        ? data.mobNames.map((value: unknown, index: number) => typeof value === "string" ? value : UNITY_MOB_NAMES[index])
-        : UNITY_MOB_NAMES;
+      const loadedMobNames = Array.isArray(data.mobTypeNames) && data.mobTypeNames.length === MOB_TYPES.length
+        ? data.mobTypeNames.map((value: unknown, index: number) => typeof value === "string" ? value : MOB_TYPES.map((type) => type.name)[index])
+        : MOB_TYPES.map((type) => type.name);
       const loadedChase = Array.from({ length: 10 }, (_, index) => {
         const value = data.mobChaseDistances?.[index];
         return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100 ? String(value) : "";
@@ -117,11 +129,10 @@ export default function RemoteConfigPage() {
     setNamesSaved(false);
     try {
       const payload = {
-        mobChaseDistances: chaseInputs.map((value) => value.trim() === "" ? null : Number(value)),
-        mobNames: mobNameInputs.map((value) => value.trim()),
-        bossNames: bossNameInputs.map((value) => value.trim()),
-        boyCharacterName: boyCharacterNameInput.trim(),
-        girlCharacterName: girlCharacterNameInput.trim(),
+        ...(section === "chase" ? { mobChaseDistances: chaseInputs.map((value) => value.trim() === "" ? null : Number(value)) } : {}),
+        ...(section === "mobs" ? { mobTypeNames: mobNameInputs.map((value) => value.trim()) } : {}),
+        ...(section === "bosses" ? { bossNames: bossNameInputs.map((value) => value.trim()) } : {}),
+        ...(section === "characters" ? { boyCharacterName: boyCharacterNameInput.trim(), girlCharacterName: girlCharacterNameInput.trim() } : {}),
       };
       const res = await fetch("/api/remote-config", {
         method: "POST",
@@ -130,19 +141,27 @@ export default function RemoteConfigPage() {
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error ?? "Names could not be saved.");
-      const savedBossNames = Array.isArray(data.bossNames) ? data.bossNames : payload.bossNames;
+      if (payload.mobChaseDistances) {
       const savedChase = (data.mobChaseDistances ?? payload.mobChaseDistances).map((value: number | null) => value === null ? "" : String(value));
       setChaseDistances(savedChase);
       setChaseInputs(savedChase);
-      const savedMobNames = Array.isArray(data.mobNames) ? data.mobNames : payload.mobNames;
+      }
+      if (payload.mobTypeNames) {
+      const savedMobNames = Array.isArray(data.mobTypeNames) ? data.mobTypeNames : payload.mobTypeNames;
       setMobNames(savedMobNames);
       setMobNameInputs(savedMobNames);
+      }
+      if (payload.bossNames) {
+      const savedBossNames = Array.isArray(data.bossNames) ? data.bossNames : payload.bossNames;
       setBossNames(savedBossNames);
       setBossNameInputs(savedBossNames);
+      }
+      if (payload.boyCharacterName !== undefined && payload.girlCharacterName !== undefined) {
       setBoyCharacterName(data.boyCharacterName ?? payload.boyCharacterName);
       setBoyCharacterNameInput(data.boyCharacterName ?? payload.boyCharacterName);
       setGirlCharacterName(data.girlCharacterName ?? payload.girlCharacterName);
       setGirlCharacterNameInput(data.girlCharacterName ?? payload.girlCharacterName);
+      }
       setNamesSaved(true);
     } catch (err) {
       setNamesError(err instanceof Error ? err.message : String(err));
@@ -213,32 +232,53 @@ export default function RemoteConfigPage() {
     }
   }
 
+  const sectionDirty = {
+    characters: boyCharacterNameInput.trim() !== boyCharacterName || girlCharacterNameInput.trim() !== girlCharacterName,
+    mobs: mobNameInputs.some((value, index) => value.trim() !== mobNames[index]),
+    bosses: bossNameInputs.some((value, index) => value.trim() !== bossNames[index]),
+    chase: chaseInputs.some((value, index) => (value.trim() === "" ? "" : String(Number(value))) !== chaseDistances[index]),
+    about: false, testing: false, downloads: apkUrlInput.trim() !== apkDownloadUrl,
+  };
+
   return (
     <div className="space-y-7">
-      <header className="max-w-3xl"><p className="eyebrow">Live Operations</p><h1 className="page-title mt-2">Game controls</h1><p className="mt-4 text-base leading-7 text-stone-400">Control runtime behavior and player-facing names stored at <code className="rounded bg-white/5 px-1.5 py-1 text-sm text-stone-300">adminConfig/flags</code>.</p></header>
-      <div className="flex gap-3 rounded-2xl border border-emerald-300/15 bg-emerald-300/6 p-5 text-sm text-emerald-100/75"><span className="text-emerald-300" aria-hidden="true">✓</span><div><p className="font-bold text-emerald-200">Game integration live</p><p className="mt-1 leading-6">Saved controls and names are delivered to running games through the live game service. Offline games keep their built-in names until they reconnect.</p></div></div>
-      <AboutCreditsEditor />
+      <header><p className="eyebrow">Live Operations</p><h1 className="page-title mt-2">Game controls</h1><p className="mt-2 text-sm text-stone-400">Choose a section to edit. Saved changes reach connected games.</p></header>
+      <nav aria-label="Game control sections" className="sticky top-16 z-30 flex flex-wrap gap-2 rounded-2xl border border-white/10 bg-[#0b1b14] p-3 shadow-lg">
+        {sections.map(({ id, label }) => (
+          <button key={id} type="button" aria-pressed={section === id} disabled={savingNames}
+            onClick={() => { setSection(id); setNamesSaved(false); setNamesError(null); }}
+            className={`rounded-xl px-4 py-2.5 text-sm font-bold transition-colors disabled:opacity-50 ${section === id ? "bg-amber-300 text-[#172018]" : "text-stone-300 hover:bg-white/10"}`}>
+            {label}{sectionDirty[id] && <span className="ml-1" aria-label="Unsaved changes">?</span>}
+          </button>
+        ))}
+      </nav>
+      <div hidden={section !== "about"}><AboutCreditsEditor /></div>
       {loadState === "loading" && <div className="game-panel flex items-center gap-3 rounded-2xl p-5 text-sm text-stone-400" role="status"><span className="size-4 animate-spin rounded-full border-2 border-emerald-300/25 border-t-emerald-300" />Loading current flag state...</div>}
       {error && <div className="rounded-2xl border border-red-400/20 bg-red-400/8 p-5 text-sm text-red-200" role="alert">{error}</div>}
-      {loadState !== "loading" && (
+      {loadState !== "loading" && section === "testing" && (
         <div className="game-panel flex flex-col gap-6 rounded-2xl p-6 sm:flex-row sm:items-center sm:justify-between">
           <div><div className="mb-3 flex items-center gap-2"><span className={`size-2 rounded-full ${showCheatButton ? "bg-emerald-400 shadow-[0_0_10px_#34d399]" : "bg-stone-600"}`} /><span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Tester access {showCheatButton ? "enabled" : "disabled"}</span></div><h2 className="text-lg font-bold text-white">Tester Cheat button</h2><p className="mt-2 max-w-xl text-sm leading-6 text-stone-400">Turns the in-game Cheat button on or off for tester accounts. Regular player accounts never see it.</p></div>
           <button onClick={handleToggle} disabled={saving} className={`relative h-10 w-[4.5rem] shrink-0 rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${showCheatButton ? "border-emerald-300/30 bg-emerald-400" : "border-white/10 bg-stone-700"}`} aria-pressed={showCheatButton} aria-label="Enable the in-game Cheat button for tester accounts"><span className={`absolute left-1 top-1 h-8 w-8 rounded-full bg-white shadow-md transition-transform ${showCheatButton ? "translate-x-8" : "translate-x-0"}`} /></button>
         </div>
       )}
-      {loadState !== "loading" && (
+      {loadState !== "loading" && ["characters", "mobs", "bosses", "chase"].includes(section) && (
         <section className="game-panel rounded-2xl p-6" aria-labelledby="content-names-heading">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-amber-300">Player-facing content</p>
-              <h2 id="content-names-heading" className="mt-2 text-xl font-bold text-white">Mob settings and character names</h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-400">Edit David and Clarisa in character selection, plus the regular mobs and boss in each arc. Current game names are filled in automatically.</p>
+              <h2 id="content-names-heading" className="mt-2 text-xl font-bold text-white">{sections.find((item) => item.id === section)?.label}</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-400">Edit this section, then save. Unsaved changes stay here when you switch sections.</p>
             </div>
             <span className="w-fit rounded-full border border-emerald-300/15 bg-emerald-300/8 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300">Live in game</span>
           </div>
           <form onSubmit={handleSaveNames} className="mt-6">
             <fieldset disabled={savingNames || loadState !== "ready"}>
-            <div className="grid gap-4 md:grid-cols-2">
+            {(section === "bosses" || section === "chase") && <label className="mb-5 block max-w-sm text-sm font-bold text-stone-200">Choose arc
+              <select value={selectedArc} onChange={(event) => setSelectedArc(Number(event.target.value))} className="mt-2 block w-full rounded-xl border border-white/15 bg-[#10241b] px-4 py-3 text-white">
+                {Array.from({ length: 10 }, (_, index) => <option key={index} value={index}>Arc {index + 1}{(section === "bosses" ? bossNameInputs[index].trim() !== bossNames[index] : chaseInputs[index] !== chaseDistances[index]) ? " ? unsaved" : ""}</option>)}
+              </select>
+            </label>}
+            {section === "characters" && <div className="grid gap-4 md:grid-cols-2">
               <label className="block text-sm font-bold text-stone-200">
                 David&apos;s name
                 <span className="mt-1 block text-xs font-normal leading-5 text-stone-500">Shown on David&apos;s character-selection option and biography.</span>
@@ -249,32 +289,42 @@ export default function RemoteConfigPage() {
                 <span className="mt-1 block text-xs font-normal leading-5 text-stone-500">Shown on Clarisa&apos;s character-selection option and biography.</span>
                 <input type="text" value={girlCharacterNameInput} required minLength={2} maxLength={40} onChange={(e) => { setGirlCharacterNameInput(e.target.value); setNamesSaved(false); }} className="mt-3 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-amber-300/50 focus:outline-none" />
               </label>
-            </div>
-            <div className="mt-7 border-t border-white/7 pt-6">
-              <h3 className="text-base font-bold text-white">Mob settings by arc</h3>
-              <p className="mt-1 text-xs leading-5 text-stone-500">Actual game models used in each arc. One mob name applies to all the regular enemies pictured for that arc. Click a picture to enlarge it.</p>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            </div>}
+            {section === "mobs" && <div>
+              <h3 className="text-base font-bold text-white">Mob names by type</h3>
+              <p className="mt-1 text-xs leading-5 text-stone-500">Edit a type once to rename every mob of that type across all arcs. Click a picture to enlarge it.</p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 {mobNameInputs.map((value, index) => (
                   <div key={index} className="rounded-xl border border-white/10 bg-black/15 p-3">
-                    <MobPreviewGallery arc={index + 1} kind="mob" />
+                    <MobPreviewGallery model={MOB_TYPES[index].model} kind="mob" />
                     <label className="mt-3 block text-sm font-bold text-stone-200">
-                    Arc {index + 1} mob
+                    {MOB_TYPES[index].name} name
                     <input type="text" value={value} required minLength={2} maxLength={40} onChange={(e) => { const next = [...mobNameInputs]; next[index] = e.target.value; setMobNameInputs(next); setNamesSaved(false); }} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-amber-300/50 focus:outline-none" />
                   </label>
+                    <p className="mt-2 text-xs text-stone-500">Applies to every {MOB_TYPES[index].name} in all arcs.</p>
+                  </div>
+                ))}
+              </div>
+            </div>}
+            {section === "chase" && <div>
+              <h3 className="text-base font-bold text-white">Chase distances by arc</h3>
+              <div className="mt-4 max-w-xl space-y-4">
+                {chaseInputs.map((_, index) => index === selectedArc ? (
+                  <div key={index} className="rounded-xl border border-white/10 bg-black/15 p-3">
                     <label className="mt-3 block text-sm font-bold text-stone-200">
-                      Chase distance (metres)
+                      Arc {index + 1} chase distance (metres)
                       <input type="number" min={0} max={100} step="any" value={chaseInputs[index]} placeholder="Use game setting" onChange={(e) => { const next = [...chaseInputs]; next[index] = e.target.value; setChaseInputs(next); setNamesSaved(false); }} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-amber-300/50 focus:outline-none" />
                       <span className="mt-1 block text-xs font-normal leading-5 text-stone-500">0-100 m. Blank restores each mob&apos;s game setting; 0 disables chasing. Applies to regular mobs in this arc.</span>
                     </label>
                   </div>
-                ))}
+                ) : null)}
               </div>
-            </div>
-            <div className="mt-7 border-t border-white/7 pt-6">
+            </div>}
+            {section === "bosses" && <div>
               <h3 className="text-base font-bold text-white">Boss names by arc</h3>
               <p className="mt-1 text-xs leading-5 text-stone-500">The actual boss model for each arc is shown below. Edit its name to change the boss health-bar label in game.</p>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {bossNameInputs.map((value, index) => (
+              <div className="mt-4 max-w-xl space-y-4">
+                {bossNameInputs.map((value, index) => index === selectedArc ? (
                   <div key={index} className="rounded-xl border border-white/10 bg-black/15 p-3">
                     <MobPreviewGallery arc={index + 1} kind="boss" />
                     <label className="mt-3 block text-sm font-bold text-stone-200">
@@ -282,12 +332,12 @@ export default function RemoteConfigPage() {
                     <input type="text" value={value} required minLength={2} maxLength={40} onChange={(e) => { const next = [...bossNameInputs]; next[index] = e.target.value; setBossNameInputs(next); setNamesSaved(false); }} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-amber-300/50 focus:outline-none" />
                   </label>
                   </div>
-                ))}
+                ) : null)}
               </div>
-            </div>
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <button type="submit" disabled={loadState !== "ready" || savingNames || (chaseInputs.every((value, index) => (value.trim() === "" ? "" : String(Number(value))) === chaseDistances[index]) && mobNameInputs.every((value, index) => value.trim() === mobNames[index]) && bossNameInputs.every((value, index) => value.trim() === bossNames[index]) && boyCharacterNameInput.trim() === boyCharacterName && girlCharacterNameInput.trim() === girlCharacterName)} className="rounded-xl bg-amber-300 px-5 py-2.5 text-sm font-extrabold text-[#172018] shadow-lg shadow-amber-950/20 hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-50">
-                {savingNames ? "Saving settings..." : "Save settings"}
+            </div>}
+            <div className="sticky bottom-3 mt-5 flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-[#10241b] p-3">
+              <button type="submit" disabled={loadState !== "ready" || savingNames || !sectionDirty[section]} className="rounded-xl bg-amber-300 px-5 py-2.5 text-sm font-extrabold text-[#172018] shadow-lg shadow-amber-950/20 hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-50">
+                {savingNames ? "Saving..." : `Save ${sections.find((item) => item.id === section)?.label.toLowerCase()}`}
               </button>
               {namesSaved && !namesError && <p className="text-sm font-bold text-emerald-300" role="status">Success — settings saved and sent to the game.</p>}
               {namesError && <p className="text-sm text-red-300" role="alert">{namesError}</p>}
@@ -296,7 +346,7 @@ export default function RemoteConfigPage() {
           </form>
         </section>
       )}
-      {loadState !== "loading" && (
+      {loadState !== "loading" && section === "downloads" && (
         <div className="game-panel rounded-2xl p-6">
           <div className="mb-3 flex items-center gap-2">
             <span className={`size-2 rounded-full ${apkDownloadEnabled ? (apkDownloadUrl ? "bg-emerald-400 shadow-[0_0_10px_#34d399]" : "bg-amber-400 shadow-[0_0_10px_#fbbf24]") : "bg-stone-600"}`} />

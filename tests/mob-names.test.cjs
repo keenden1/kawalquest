@@ -19,6 +19,7 @@ function harness(role = 'admin', data = {}) {
   const writes = [];
   const api = load('src/app/api/remote-config/route.ts', {
     '@/lib/contentNames': defaults,
+    '@/lib/aboutDefaults.json': { default: require('../src/lib/aboutDefaults.json') },
     'next/server': { NextResponse: { json: (body, init = {}) => ({ body, status: init.status || 200 }) } },
     '@/lib/auth': { getSessionUser: async () => role ? { role } : null, isAdminRole: role => ['admin', 'superadmin'].includes(role) },
     '@/lib/firebaseAdmin': { getAdminDb: () => ({ collection: () => ({ doc: () => ({
@@ -59,7 +60,7 @@ test('rejects malformed, blank, long, markup and control-character names before 
   }
 });
 test('allows Unicode and preserves unrelated-field updates', async () => {
-  const h = harness(); const list = names(); list[0] = 'Mandirigmang Pilipino'; list[1] = 'Niño';
+  const h = harness(); const list = names(); list[0] = 'Mandirigmang Pilipino'; list[1] = 'NiÃ±o';
   assert.equal((await h.post({ mobNames: list })).status, 200);
   const other = harness(); assert.equal((await other.post({ showCheatButton: false })).status, 200);
   assert.deepEqual(other.writes[0].update, { showCheatButton: false });
@@ -99,5 +100,32 @@ test('chase changes require administrator permission', async () => {
     const h = harness(role);
     assert.equal((await h.post({mobChaseDistances:Array(10).fill(5)})).status,status);
     assert.equal(h.writes.length,0);
+  }
+});
+
+test('type names default independently of legacy arc names and preserve other settings', async () => {
+  const h = harness('admin', { mobNameArc1: 'Old mixed name', mobNameTypeWolf: 'Forest Wolf', bossNameArc1: 'Boss' });
+  const body = (await h.api.GET()).body;
+  assert.deepEqual(Array.from(body.mobTypeNames), ['Forest Wolf', 'Goblin', 'Hammer Goblin', 'Giant Troll']);
+  assert.equal(body.bossNames[0], 'Boss');
+});
+test('saves type names using stable model keys only', async () => {
+  const h = harness();
+  const result = await h.post({mobTypeNames: [' White Wolf ', 'Goblin', 'Hammer Goblin', 'Giant Troll']});
+  assert.equal(result.status, 200);
+  assert.deepEqual(h.writes, [{update: {mobNameTypeWolf: 'White Wolf', mobNameTypeGoblin: 'Goblin', mobNameTypeHammerGoblin: 'Hammer Goblin', mobNameTypeGiantTroll: 'Giant Troll'}, options: {merge: true}}]);
+});
+test('invalid type names reject the whole save, including unrelated settings', async () => {
+  for (const mobTypeNames of [null, [], names(), ['Wolf', 'Goblin', 'Hammer Goblin', '<b>Troll</b>'], ['Wolf', 'Goblin', 'Hammer Goblin', ''], ['Wolf', 'Goblin', 'Hammer Goblin', 3], ['Wolf', 'Goblin', 'Hammer Goblin', 'x'.repeat(41)]]) {
+    const h = harness();
+    assert.equal((await h.post({mobTypeNames, showCheatButton: true})).status, 400);
+    assert.equal(h.writes.length, 0);
+  }
+});
+test('type names require admin authorization', async () => {
+  for (const [role, status] of [[null,401], ['user',403], ['tester',403]]) {
+    const h = harness(role);
+    assert.equal((await h.post({mobTypeNames:['Wolf','Goblin','Hammer Goblin','Giant Troll']})).status, status);
+    assert.equal(h.writes.length, 0);
   }
 });
