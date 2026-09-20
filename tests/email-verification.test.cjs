@@ -13,7 +13,15 @@ function harness(options = {}) {
   const calls = { mail: [], link: [], verified: [] };
   const snapshot = () => ({ data: () => ({ nextSendAt }) });
   const ref = { get: async () => snapshot() };
+  const templateExports = {};
+  const templateCode = ts.transpileModule(fs.readFileSync(path.join(backend, 'src/lib/emailTemplates.ts'), 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  vm.runInNewContext(templateCode, { exports: templateExports, process: { env: {} }, require: id => {
+    assert.equal(id, 'server-only'); return {};
+  } });
   const stubs = {
+    '@/lib/emailTemplates': templateExports,
     'next/server': { NextResponse: { json: (body, init = {}) => ({ body, ...init }) } },
     '@/lib/firebaseAdmin': {
       getAdminAuth: () => ({
@@ -56,6 +64,12 @@ test('delivery uses Auth email and escapes the generated verification link', asy
   assert.equal(response.status, 200); assert.equal(response.body.retryAfterSeconds, 300);
   assert.equal(h.calls.mail[0].to, 'owner@gmail.com'); assert.equal(h.calls.link[0], 'owner@gmail.com');
   assert.ok(h.calls.mail[0].html.includes('&amp;mode=verifyEmail'));
+  assert.ok(h.calls.mail[0].html.includes('Email verification'));
+  assert.ok(h.calls.mail[0].html.includes('Verify email &rarr;'));
+  assert.ok(h.calls.mail[0].html.includes('background-color:#07110d'));
+  assert.ok(h.calls.mail[0].html.includes('background-color:#fcd34d'));
+  assert.ok(h.calls.mail[0].html.includes('https://www.kawalquest.online/logo.png'));
+  assert.ok(!h.calls.mail[0].html.includes('Reset your password'));
   assert.equal(h.calls.verified[0][1], true); assert.equal(response.headers['Cache-Control'], 'no-store');
 });
 test('simultaneous requests and retries send only once per five minutes', async () => {

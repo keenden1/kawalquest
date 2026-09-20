@@ -80,3 +80,27 @@ test('boss section shows one arc at a time and retains drafts across arc changes
   find(tree,n=>n.type==='select').props.onChange({target:{value:'0'}}); tree = h.render();
   assert.equal(inputs(tree)[0].props.value,'First boss');
 });
+
+
+test('mob counts preserve drafts, save only regular levels, and restore defaults', async () => {
+  const h = harness([[200, {}], [200, {}], [200, {}]]);
+  let tree = await h.start();
+  sectionButton(tree, 'Mob counts').props.onClick(); tree = h.render();
+  const numbers = tree => nodes(tree).filter(n => n.type === 'input' && n.props.type === 'number');
+  assert.equal(numbers(tree).length, 20);
+  assert.equal(numbers(tree)[0].props.placeholder, '4');
+  assert.equal(numbers(tree)[8].props.placeholder, '15');
+  numbers(tree)[0].props.onChange({target: {value: '0'}}); tree = h.render();
+  numbers(tree)[19].props.onChange({target: {value: '25'}}); tree = h.render();
+  sectionButton(tree, 'Bosses').props.onClick(); tree = h.render();
+  sectionButton(tree, 'Mob counts').props.onClick(); tree = h.render();
+  assert.equal(numbers(tree)[19].props.value, '25');
+  await form(tree).props.onSubmit(event); tree = h.render();
+  const payload = JSON.parse(h.requests[1].options.body);
+  assert.deepEqual(Object.keys(payload), ['mobCounts']);
+  assert.equal(payload.mobCounts.length, 20); assert.equal(payload.mobCounts[0], 0);
+  assert.equal(payload.mobCounts[1], null); assert.equal(payload.mobCounts[19], 25);
+  find(tree, n => n.type === 'button' && n.props.children === 'Restore all defaults').props.onClick(); tree = h.render();
+  await form(tree).props.onSubmit(event);
+  assert.deepEqual(JSON.parse(h.requests[2].options.body), {mobCounts: Array(20).fill(null)});
+});

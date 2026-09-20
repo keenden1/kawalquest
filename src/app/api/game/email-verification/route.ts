@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminDb } from "@/lib/firebaseAdmin";
 import { sendMail } from "@/lib/mailer";
+import { emailVerificationHtml } from "@/lib/emailTemplates";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,8 +10,7 @@ const cooldownMs = 300_000;
 const json = (body: object, status = 200, retry = 0) => NextResponse.json(body, {
   status, headers: { ...headers, ...(retry ? { "Retry-After": String(retry) } : {}) },
 });
-const escapeHtml = (text: string) => text.replace(/[&<>"']/g, char =>
-  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
+
 
 async function handle(request: Request, send: boolean) {
   const match = request.headers.get("authorization")?.match(/^Bearer ([^\s]+)$/i);
@@ -46,7 +46,7 @@ async function handle(request: Request, send: boolean) {
     try {
       const link = await getAdminAuth().generateEmailVerificationLink(user.email);
       await sendMail({ to: user.email, subject: "Verify your Kawal Quest email",
-        html: `<h1>Verify your email</h1><p>Welcome to Kawal Quest! Verify your email to enable cloud sync.</p><p><a href="${escapeHtml(link)}">Verify email</a></p><p>After verifying, return to Settings in the game and tap Check status. You can keep playing before verification.</p><p>If you did not create this account, ignore this email.</p>` });
+        html: emailVerificationHtml(link, "https://www.kawalquest.online") });
       return json({ verified: false, retryAfterSeconds: 300 });
     } catch {
       // SMTP can accept mail before a connection fails. Keep the reservation to prevent duplicates.

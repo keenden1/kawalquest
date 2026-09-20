@@ -129,3 +129,39 @@ test('type names require admin authorization', async () => {
     assert.equal(h.writes.length, 0);
   }
 });
+
+
+test('mob counts expose 20 regular-level overrides and ignore invalid stored values', async () => {
+  const h = harness('admin', { mobCountArc1Level1: 0, mobCountArc10Level2: 100, mobCountArc2Level1: 1.5, mobCountArc1Level3: 99 });
+  const values = (await h.api.GET()).body.mobCounts;
+  assert.equal(values.length, 20); assert.equal(values[0], 0); assert.equal(values[19], 100);
+  assert.equal(values[2], null); assert.equal(values[1], null);
+});
+
+test('mob count writes cover regular levels only and preserve bosses with merge', async () => {
+  const values = Array(20).fill(null); values[0] = 0; values[19] = 100;
+  const h = harness(); const response = await h.post({ mobCounts: values });
+  assert.equal(response.status, 200); assert.equal(h.writes[0].options.merge, true);
+  assert.equal(Object.keys(h.writes[0].update).length, 20);
+  assert.equal(h.writes[0].update.mobCountArc1Level1, 0);
+  assert.equal(h.writes[0].update.mobCountArc10Level2, 100);
+  assert.equal(h.writes[0].update.mobCountArc1Level2, null);
+  assert.ok(Object.keys(h.writes[0].update).every(key => /^mobCountArc(10|[1-9])Level[12]$/.test(key)));
+});
+
+test('bad counts reject the entire update before writing', async () => {
+  for (const invalid of [-1, 101, 2.5, '6', true, {}, []]) {
+    const values = Array(20).fill(null); values[19] = invalid;
+    const h = harness(); assert.equal((await h.post({ mobCounts: values, showCheatButton: true })).status, 400);
+    assert.equal(h.writes.length, 0);
+  }
+  for (const mobCounts of [null, [], Array(19).fill(1), Array(30).fill(1)])
+    assert.equal((await harness().post({ mobCounts })).status, 400);
+});
+
+test('non-admin accounts cannot change mob counts', async () => {
+  for (const role of [null, 'user', 'tester']) {
+    const h = harness(role); assert.notEqual((await h.post({ mobCounts: Array(20).fill(5) })).status, 200);
+    assert.equal(h.writes.length, 0);
+  }
+});

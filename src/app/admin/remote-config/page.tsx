@@ -6,11 +6,14 @@ import AboutCreditsEditor from "@/components/AboutCreditsEditor";
 import MobPreviewGallery from "@/components/MobPreviewGallery";
 import { UNITY_BOSS_NAMES, MOB_TYPES } from "@/lib/contentNames";
 
+const DEFAULT_MOB_COUNTS = [[4,4],[7,9],[6,10],[6,6],[15,6],[6,6],[6,6],[6,6],[6,6],[6,6]];
+
 type LoadState = "loading" | "ready" | "error";
 const sections = [
   { id: "about", label: "About & credits" },
   { id: "characters", label: "Characters" },
   { id: "mobs", label: "Mobs" },
+  { id: "counts", label: "Mob counts" },
   { id: "bosses", label: "Bosses" },
   { id: "chase", label: "Chase distance" },
   { id: "testing", label: "Tester access" },
@@ -27,6 +30,8 @@ export default function RemoteConfigPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [mobCounts, setMobCounts] = useState<string[]>(Array(20).fill(""));
+  const [countInputs, setCountInputs] = useState<string[]>(Array(20).fill(""));
   const [chaseDistances, setChaseDistances] = useState<string[]>(Array(10).fill(""));
   const [chaseInputs, setChaseInputs] = useState<string[]>(Array(10).fill(""));
   const [mobNames, setMobNames] = useState<string[]>(MOB_TYPES.map((type) => type.name));
@@ -73,6 +78,12 @@ export default function RemoteConfigPage() {
         const value = data.mobChaseDistances?.[index];
         return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100 ? String(value) : "";
       });
+      const loadedCounts = Array.from({ length: 20 }, (_, i) => {
+        const value = data.mobCounts?.[i];
+        return typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 100 ? String(value) : "";
+      });
+      setMobCounts(loadedCounts);
+      setCountInputs(loadedCounts);
       setChaseDistances(loadedChase);
       setChaseInputs(loadedChase);
       setMobNames(loadedMobNames);
@@ -129,6 +140,7 @@ export default function RemoteConfigPage() {
     setNamesSaved(false);
     try {
       const payload = {
+        ...(section === "counts" ? { mobCounts: countInputs.map(value => value.trim() === "" ? null : Number(value)) } : {}),
         ...(section === "chase" ? { mobChaseDistances: chaseInputs.map((value) => value.trim() === "" ? null : Number(value)) } : {}),
         ...(section === "mobs" ? { mobTypeNames: mobNameInputs.map((value) => value.trim()) } : {}),
         ...(section === "bosses" ? { bossNames: bossNameInputs.map((value) => value.trim()) } : {}),
@@ -141,6 +153,10 @@ export default function RemoteConfigPage() {
       });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error ?? "Names could not be saved.");
+      if (payload.mobCounts) {
+        const saved = (data.mobCounts ?? payload.mobCounts).map((value: number | null) => value === null ? "" : String(value));
+        setMobCounts(saved); setCountInputs(saved);
+      }
       if (payload.mobChaseDistances) {
       const savedChase = (data.mobChaseDistances ?? payload.mobChaseDistances).map((value: number | null) => value === null ? "" : String(value));
       setChaseDistances(savedChase);
@@ -233,6 +249,7 @@ export default function RemoteConfigPage() {
   }
 
   const sectionDirty = {
+    counts: countInputs.some((value, i) => (value.trim() === "" ? "" : String(Number(value))) !== mobCounts[i]),
     characters: boyCharacterNameInput.trim() !== boyCharacterName || girlCharacterNameInput.trim() !== girlCharacterName,
     mobs: mobNameInputs.some((value, index) => value.trim() !== mobNames[index]),
     bosses: bossNameInputs.some((value, index) => value.trim() !== bossNames[index]),
@@ -261,7 +278,7 @@ export default function RemoteConfigPage() {
           <button onClick={handleToggle} disabled={saving} className={`relative h-10 w-[4.5rem] shrink-0 rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${showCheatButton ? "border-emerald-300/30 bg-emerald-400" : "border-white/10 bg-stone-700"}`} aria-pressed={showCheatButton} aria-label="Enable the in-game Cheat button for tester accounts"><span className={`absolute left-1 top-1 h-8 w-8 rounded-full bg-white shadow-md transition-transform ${showCheatButton ? "translate-x-8" : "translate-x-0"}`} /></button>
         </div>
       )}
-      {loadState !== "loading" && ["characters", "mobs", "bosses", "chase"].includes(section) && (
+      {loadState !== "loading" && ["characters", "mobs", "bosses", "chase", "counts"].includes(section) && (
         <section className="game-panel rounded-2xl p-6" aria-labelledby="content-names-heading">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -289,6 +306,25 @@ export default function RemoteConfigPage() {
                 <span className="mt-1 block text-xs font-normal leading-5 text-stone-500">Shown on Clarisa&apos;s character-selection option and biography.</span>
                 <input type="text" value={girlCharacterNameInput} required minLength={2} maxLength={40} onChange={(e) => { setGirlCharacterNameInput(e.target.value); setNamesSaved(false); }} className="mt-3 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-amber-300/50 focus:outline-none" />
               </label>
+            </div>}
+            {section === "counts" && <div>
+              <h3 className="text-base font-bold text-white">Regular mobs per level</h3>
+              <p className="mt-1 text-sm leading-6 text-stone-400">Choose 0?100 mobs. Leave blank to restore the default shown. Changes apply on the next level entry after the game receives them. Level 3 bosses stay fixed.</p>
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
+                {DEFAULT_MOB_COUNTS.map((defaults, arc) => <div key={arc} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <h4 className="font-bold text-amber-300">Arc {arc + 1}</h4>
+                  <div className="mt-3 grid grid-cols-2 gap-3">{defaults.map((fallback, level) => {
+                    const index = arc * 2 + level;
+                    return <label key={level} className="text-sm text-stone-300">Level {level + 1}
+                      <input type="number" min={0} max={100} step={1} placeholder={String(fallback)} value={countInputs[index]}
+                        onChange={e => { const next = [...countInputs]; next[index] = e.target.value; setCountInputs(next); setNamesSaved(false); }}
+                        className="mt-2 w-full rounded-xl border border-white/10 bg-[#0b1b14] px-4 py-3 text-white focus:border-amber-300 focus:outline-none" />
+                      <span className="mt-1 block text-xs text-stone-500">Default: {fallback} mobs</span>
+                    </label>;
+                  })}</div>
+                </div>)}
+              </div>
+              <button type="button" className="mt-4 text-sm font-bold text-amber-300" onClick={() => { setCountInputs(Array(20).fill("")); setNamesSaved(false); }}>Restore all defaults</button>
             </div>}
             {section === "mobs" && <div>
               <h3 className="text-base font-bold text-white">Mob names by type</h3>

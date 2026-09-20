@@ -22,6 +22,10 @@ export async function GET() {
       showCheatButton: Boolean(data?.showCheatButton ?? false),
       apkDownloadUrl: typeof data?.apkDownloadUrl === "string" ? data.apkDownloadUrl : "",
       apkDownloadEnabled: Boolean(data?.apkDownloadEnabled ?? false),
+      mobCounts: Array.from({ length: 20 }, (_, index) => {
+        const value = data?.[`mobCountArc${Math.floor(index / 2) + 1}Level${index % 2 + 1}`];
+        return typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 100 ? value : null;
+      }),
       mobChaseDistances: Array.from({ length: 10 }, (_, index) => {
         const value = data?.[`mobChaseDistanceArc${index + 1}`];
         return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100 ? value : null;
@@ -69,6 +73,7 @@ export async function POST(request: Request) {
       [key: `bossNameArc${number}`]: string | undefined;
       [key: `mobNameType${string}`]: string | undefined;
       [key: `mobNameArc${number}`]: string | undefined;
+      [key: `mobCountArc${number}Level${number}`]: number | null | undefined;
       [key: `mobChaseDistanceArc${number}`]: number | null | undefined;
     } = {};
 
@@ -249,6 +254,20 @@ export async function POST(request: Request) {
       }
     }
 
+    let savedMobCounts: (number | null)[] | undefined;
+    if ("mobCounts" in body) {
+      if (!Array.isArray(body.mobCounts) || body.mobCounts.length !== 20)
+        return NextResponse.json({ error: "Provide Level 1 and Level 2 mob counts for all 10 arcs." }, { status: 400 });
+      savedMobCounts = [];
+      for (let index = 0; index < 20; index++) {
+        const value = body.mobCounts[index];
+        if (value !== null && (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 100))
+          return NextResponse.json({ error: "Mob counts must be whole numbers from 0 to 100, or blank for the scene default." }, { status: 400 });
+        update[`mobCountArc${Math.floor(index / 2) + 1}Level${index % 2 + 1}`] = value;
+        savedMobCounts.push(value);
+      }
+    }
+
     if (Object.keys(update).length === 0) {
       return NextResponse.json({ error: "No valid fields to update." }, { status: 400 });
     }
@@ -259,7 +278,7 @@ export async function POST(request: Request) {
       .doc(CONFIG_DOC_PATH[1])
       .set(update, { merge: true });
 
-    return NextResponse.json({ ...update, bossNames: savedBossNames, mobTypeNames: savedMobTypeNames, mobNames: savedMobNames, mobChaseDistances: savedMobChaseDistances });
+    return NextResponse.json({ ...update, mobCounts: savedMobCounts, bossNames: savedBossNames, mobTypeNames: savedMobTypeNames, mobNames: savedMobNames, mobChaseDistances: savedMobChaseDistances });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : String(err) },
