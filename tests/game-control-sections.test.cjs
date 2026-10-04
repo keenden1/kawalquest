@@ -26,7 +26,7 @@ function harness(responses) {
     require: name => {
       if (name === 'react') return react;
       if (name === 'react/jsx-runtime') return {jsx, jsxs: jsx};
-      if (name === '@/components/AboutCreditsEditor' || name === '@/components/MobPreviewGallery') return {default: () => null};
+      if (name === '@/components/AboutCreditsEditor' || name === '@/components/MobPreviewGallery' || name === '@/components/NPCQuestionsEditor') return {default: () => null};
       if (name === '@/lib/contentNames') return {UNITY_BOSS_NAMES: Array(10).fill('Boss'), MOB_TYPES: [{name:'Wolf'},{name:'Goblin'},{name:'Hammer Goblin'},{name:'Giant Troll'}]};
       throw new Error('Unexpected import: ' + name);
     },

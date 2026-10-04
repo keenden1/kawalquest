@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 
 import AboutCreditsEditor from "@/components/AboutCreditsEditor";
+import NPCQuestionsEditor from "@/components/NPCQuestionsEditor";
 import MobPreviewGallery from "@/components/MobPreviewGallery";
 import { UNITY_BOSS_NAMES, MOB_TYPES } from "@/lib/contentNames";
 
@@ -11,6 +12,7 @@ const DEFAULT_MOB_COUNTS = [[4,4],[7,9],[6,10],[6,6],[15,6],[6,6],[6,6],[6,6],[6
 type LoadState = "loading" | "ready" | "error";
 const sections = [
   { id: "about", label: "About & credits" },
+  { id: "questions", label: "NPC questions" },
   { id: "characters", label: "Characters" },
   { id: "mobs", label: "Mobs" },
   { id: "counts", label: "Mob counts" },
@@ -254,7 +256,7 @@ export default function RemoteConfigPage() {
     mobs: mobNameInputs.some((value, index) => value.trim() !== mobNames[index]),
     bosses: bossNameInputs.some((value, index) => value.trim() !== bossNames[index]),
     chase: chaseInputs.some((value, index) => (value.trim() === "" ? "" : String(Number(value))) !== chaseDistances[index]),
-    about: false, testing: false, downloads: apkUrlInput.trim() !== apkDownloadUrl,
+    about: false, questions: false, testing: false, downloads: apkUrlInput.trim() !== apkDownloadUrl,
   };
 
   return (
@@ -270,6 +272,7 @@ export default function RemoteConfigPage() {
         ))}
       </nav>
       <div hidden={section !== "about"}><AboutCreditsEditor /></div>
+      <div hidden={section !== "questions"}><NPCQuestionsEditor /></div>
       {loadState === "loading" && <div className="game-panel flex items-center gap-3 rounded-2xl p-5 text-sm text-stone-400" role="status"><span className="size-4 animate-spin rounded-full border-2 border-emerald-300/25 border-t-emerald-300" />Loading current flag state...</div>}
       {error && <div className="rounded-2xl border border-red-400/20 bg-red-400/8 p-5 text-sm text-red-200" role="alert">{error}</div>}
       {loadState !== "loading" && section === "testing" && (

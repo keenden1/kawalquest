@@ -1,0 +1,1342 @@
+[
+  {
+    "id": "arc1_level1_npc1606237455",
+    "arc": 1,
+    "arcName": "Jose Rizal",
+    "level": 1,
+    "scene": "1-1",
+    "npc": "Ginoong Lorence",
+    "number": 1,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "where is the Birth place of Dr. Jose Rizal",
+      "questionTL": "saan pinanganak si Dr. Jose Rizal",
+      "choices": [
+        "Calamba, Laguna, Philippines",
+        "Urdaneta, Pangasinan, Philippines",
+        "Quezon, Manila, Philippines"
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc1_level1_npc657860501",
+    "arc": 1,
+    "arcName": "Jose Rizal",
+    "level": 1,
+    "scene": "1-1",
+    "npc": "tasyo",
+    "number": 2,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "What are the two famous books written by Jose Rizal?",
+      "questionTL": "Ano ang dalawang sikat na aklat na ginawa ni Jose Rizal?",
+      "choices": [
+        "abakada at alibata",
+        "noli at el fi",
+        "superbook at book of life"
+      ],
+      "correctIndex": 1,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc1_level1_npc2127734965",
+    "arc": 1,
+    "arcName": "Jose Rizal",
+    "level": 1,
+    "scene": "1-1",
+    "npc": "sample",
+    "number": 3,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "What are the two famous books written by Jose Rizal?",
+      "questionTL": "Ano ang dalawang sikat na aklat na ginawa ni Jose Rizal?",
+      "choices": [
+        "abakada at alibata",
+        "noli at el fi",
+        "superbook at book of life"
+      ],
+      "correctIndex": 1,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc1_level2_npc1269255541",
+    "arc": 1,
+    "arcName": "Jose Rizal",
+    "level": 2,
+    "scene": "1-2",
+    "npc": "Ginoong Lorence",
+    "number": 1,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "where is the Birth place of Dr. Jose Rizal",
+      "questionTL": "saan pinanganak si Dr. Jose Rizal",
+      "choices": [
+        "Calamba, Laguna, Philippines",
+        "Urdaneta, Pangasinan, Philippines",
+        "Quezon, Manila, Philippines"
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc1_level2_npc2130414136",
+    "arc": 1,
+    "arcName": "Jose Rizal",
+    "level": 2,
+    "scene": "1-2",
+    "npc": "Ginoong Lorence",
+    "number": 2,
+    "kind": "order",
+    "configured": true,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "What's the full name of Jose Rizal",
+      "questionTL": "Ano ang Buong pangalan ni Jose Rizal",
+      "choices": [
+        "Y alonso",
+        "Rizal mercado",
+        "Jose protacio",
+        "Realonda"
+      ],
+      "correctIndex": -1,
+      "answerOrder": [
+        2,
+        1,
+        0,
+        3
+      ]
+    }
+  },
+  {
+    "id": "arc1_level2_npc1507418696",
+    "arc": 1,
+    "arcName": "Jose Rizal",
+    "level": 2,
+    "scene": "1-2",
+    "npc": "Dona Dora",
+    "number": 3,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "Who was Jose Rizal’s first teacher?",
+      "questionTL": "Sino ang unang guro ni Jose Rizal?",
+      "choices": [
+        "A. Paciano Rizal",
+        "B. Teodora Alonzo",
+        "C. Maestro Cruz "
+      ],
+      "correctIndex": 1,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc1_level2_npc911757274",
+    "arc": 1,
+    "arcName": "Jose Rizal",
+    "level": 2,
+    "scene": "1-2",
+    "npc": "Paciano",
+    "number": 4,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "Who was Jose Rizal’s first teacher?",
+      "questionTL": "Saan ipinanganak si Jose Rizal?",
+      "choices": [
+        "A. Manila",
+        "B. Batangas",
+        "B. Calamba, Laguna"
+      ],
+      "correctIndex": 2,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc2_level1_npc845567099",
+    "arc": 2,
+    "arcName": "Andres Bonifacio",
+    "level": 1,
+    "scene": "2-1",
+    "npc": "Ginoong Lorence",
+    "number": 1,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc2_level1_npc1737950342",
+    "arc": 2,
+    "arcName": "Andres Bonifacio",
+    "level": 1,
+    "scene": "2-1",
+    "npc": "Ginoong Lorence",
+    "number": 2,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc2_level1_npc1786857971",
+    "arc": 2,
+    "arcName": "Andres Bonifacio",
+    "level": 1,
+    "scene": "2-1",
+    "npc": "Ginoong Lorence",
+    "number": 3,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc2_level2_npc1633616371",
+    "arc": 2,
+    "arcName": "Andres Bonifacio",
+    "level": 2,
+    "scene": "2-2",
+    "npc": "Ginoong Lorence",
+    "number": 1,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc2_level2_npc1467670297",
+    "arc": 2,
+    "arcName": "Andres Bonifacio",
+    "level": 2,
+    "scene": "2-2",
+    "npc": "Ginoong Lorence",
+    "number": 2,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc2_level2_npc1455038726",
+    "arc": 2,
+    "arcName": "Andres Bonifacio",
+    "level": 2,
+    "scene": "2-2",
+    "npc": "Ginoong Lorence",
+    "number": 3,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc3_level1_npc1934309972",
+    "arc": 3,
+    "arcName": "Heneral Luna",
+    "level": 1,
+    "scene": "3-1",
+    "npc": "Ginoong Lorence",
+    "number": 1,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc3_level1_npc1585113788",
+    "arc": 3,
+    "arcName": "Heneral Luna",
+    "level": 1,
+    "scene": "3-1",
+    "npc": "Ginoong Lorence",
+    "number": 2,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc3_level1_npc1381168791",
+    "arc": 3,
+    "arcName": "Heneral Luna",
+    "level": 1,
+    "scene": "3-1",
+    "npc": "Ginoong Lorence",
+    "number": 3,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc3_level2_npc1982992268",
+    "arc": 3,
+    "arcName": "Heneral Luna",
+    "level": 2,
+    "scene": "3-2",
+    "npc": "Ginoong Lorence",
+    "number": 1,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc3_level2_npc2133858181",
+    "arc": 3,
+    "arcName": "Heneral Luna",
+    "level": 2,
+    "scene": "3-2",
+    "npc": "Ginoong Lorence",
+    "number": 2,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc3_level2_npc1267875017",
+    "arc": 3,
+    "arcName": "Heneral Luna",
+    "level": 2,
+    "scene": "3-2",
+    "npc": "Ginoong Lorence",
+    "number": 3,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc4_level1_npc2049963659",
+    "arc": 4,
+    "arcName": "Emilio Aguinaldo",
+    "level": 1,
+    "scene": "4-1",
+    "npc": "Ginoong Lorence",
+    "number": 1,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc4_level1_npc746275421",
+    "arc": 4,
+    "arcName": "Emilio Aguinaldo",
+    "level": 1,
+    "scene": "4-1",
+    "npc": "Ginoong Lorence",
+    "number": 2,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc4_level1_npc1631642041",
+    "arc": 4,
+    "arcName": "Emilio Aguinaldo",
+    "level": 1,
+    "scene": "4-1",
+    "npc": "Ginoong Lorence",
+    "number": 3,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc4_level2_npc1201124888",
+    "arc": 4,
+    "arcName": "Emilio Aguinaldo",
+    "level": 2,
+    "scene": "4-2",
+    "npc": "Ginoong Lorence",
+    "number": 1,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc4_level2_npc1080866746",
+    "arc": 4,
+    "arcName": "Emilio Aguinaldo",
+    "level": 2,
+    "scene": "4-2",
+    "npc": "Ginoong Lorence",
+    "number": 2,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc4_level2_npc1856471493",
+    "arc": 4,
+    "arcName": "Emilio Aguinaldo",
+    "level": 2,
+    "scene": "4-2",
+    "npc": "Ginoong Lorence",
+    "number": 3,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc5_level2_npc1229782780",
+    "arc": 5,
+    "arcName": "Lapu Lapu",
+    "level": 2,
+    "scene": "5-2",
+    "npc": "Ginoong Lorence",
+    "number": 1,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc5_level2_npc1045572099",
+    "arc": 5,
+    "arcName": "Lapu Lapu",
+    "level": 2,
+    "scene": "5-2",
+    "npc": "Ginoong Lorence",
+    "number": 2,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc5_level2_npc1458243534",
+    "arc": 5,
+    "arcName": "Lapu Lapu",
+    "level": 2,
+    "scene": "5-2",
+    "npc": "Ginoong Lorence",
+    "number": 3,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc6_level1_npc1020595961",
+    "arc": 6,
+    "arcName": "Teresa Magbanua",
+    "level": 1,
+    "scene": "6-1",
+    "npc": "Ginoong Lorence",
+    "number": 1,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc6_level1_npc1848342463",
+    "arc": 6,
+    "arcName": "Teresa Magbanua",
+    "level": 1,
+    "scene": "6-1",
+    "npc": "Ginoong Lorence",
+    "number": 2,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc6_level1_npc1692404935",
+    "arc": 6,
+    "arcName": "Teresa Magbanua",
+    "level": 1,
+    "scene": "6-1",
+    "npc": "Ginoong Lorence",
+    "number": 3,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc6_level2_npc450311658",
+    "arc": 6,
+    "arcName": "Teresa Magbanua",
+    "level": 2,
+    "scene": "6-2",
+    "npc": "Ginoong Lorence",
+    "number": 1,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc6_level2_npc1136578232",
+    "arc": 6,
+    "arcName": "Teresa Magbanua",
+    "level": 2,
+    "scene": "6-2",
+    "npc": "Ginoong Lorence",
+    "number": 2,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc6_level2_npc1232098199",
+    "arc": 6,
+    "arcName": "Teresa Magbanua",
+    "level": 2,
+    "scene": "6-2",
+    "npc": "Ginoong Lorence",
+    "number": 3,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc7_level1_npc819222384",
+    "arc": 7,
+    "arcName": "Graciano Lopez Jaena",
+    "level": 1,
+    "scene": "7-1",
+    "npc": "Ginoong Lorence",
+    "number": 1,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc7_level1_npc1461826353",
+    "arc": 7,
+    "arcName": "Graciano Lopez Jaena",
+    "level": 1,
+    "scene": "7-1",
+    "npc": "Ginoong Lorence",
+    "number": 2,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc7_level1_npc1487013439",
+    "arc": 7,
+    "arcName": "Graciano Lopez Jaena",
+    "level": 1,
+    "scene": "7-1",
+    "npc": "Ginoong Lorence",
+    "number": 3,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc7_level2_npc1510495721",
+    "arc": 7,
+    "arcName": "Graciano Lopez Jaena",
+    "level": 2,
+    "scene": "7-2",
+    "npc": "Ginoong Lorence",
+    "number": 1,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc7_level2_npc1077257921",
+    "arc": 7,
+    "arcName": "Graciano Lopez Jaena",
+    "level": 2,
+    "scene": "7-2",
+    "npc": "Ginoong Lorence",
+    "number": 2,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc7_level2_npc1890335780",
+    "arc": 7,
+    "arcName": "Graciano Lopez Jaena",
+    "level": 2,
+    "scene": "7-2",
+    "npc": "Ginoong Lorence",
+    "number": 3,
+    "kind": "choice",
+    "configured": false,
+    "rewardCoins": 0,
+    "defaults": {
+      "questionEN": "",
+      "questionTL": "",
+      "choices": [
+        "",
+        "",
+        ""
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc8_level1_npc4328439575148521208",
+    "arc": 8,
+    "arcName": "Gabriela Silang",
+    "level": 1,
+    "scene": "8-1",
+    "npc": "Tagabaryo / Villager",
+    "number": 1,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "Who led the uprising after Diego Silang died?",
+      "questionTL": "Sino ang namuno sa pag-aalsa matapos mamatay si Diego Silang?",
+      "choices": [
+        "Gabriela Silang",
+        "Jose Rizal",
+        "Apolinario Mabini"
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc8_level1_npc4328439575148521209",
+    "arc": 8,
+    "arcName": "Gabriela Silang",
+    "level": 1,
+    "scene": "8-1",
+    "npc": "Tagabaryo / Villager",
+    "number": 2,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "Which region is associated with the Silang uprising?",
+      "questionTL": "Anong rehiyon ang kaugnay ng pag-aalsa ng mga Silang?",
+      "choices": [
+        "Bicol",
+        "Ilocos",
+        "Davao"
+      ],
+      "correctIndex": 1,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc8_level1_npc4328439575148521210",
+    "arc": 8,
+    "arcName": "Gabriela Silang",
+    "level": 1,
+    "scene": "8-1",
+    "npc": "Tagabaryo / Villager",
+    "number": 3,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "In which year did Gabriela take leadership of the uprising?",
+      "questionTL": "Anong taon pinamunuan ni Gabriela ang pag-aalsa?",
+      "choices": [
+        "1896",
+        "1521",
+        "1763"
+      ],
+      "correctIndex": 2,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc8_level2_npc1739040040",
+    "arc": 8,
+    "arcName": "Gabriela Silang",
+    "level": 2,
+    "scene": "8-2",
+    "npc": "Tagabaryo / Villager",
+    "number": 1,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "Whose names are remembered in the historic Silang Pass?",
+      "questionTL": "Kaninong mga pangalan ang inaalala sa makasaysayang Pasong Silang?",
+      "choices": [
+        "Rizal at / and Luna",
+        "Mabini at / and Bonifacio",
+        "Diego at / and Gabriela Silang"
+      ],
+      "correctIndex": 2,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc8_level2_npc109647976",
+    "arc": 8,
+    "arcName": "Gabriela Silang",
+    "level": 2,
+    "scene": "8-2",
+    "npc": "Tagabaryo / Villager",
+    "number": 2,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "Whose uprising did Gabriela continue after his death?",
+      "questionTL": "Kaninong pag-aalsa ang ipinagpatuloy ni Gabriela matapos siyang mamatay?",
+      "choices": [
+        "Diego Silang",
+        "Andres Bonifacio",
+        "Emilio Aguinaldo"
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc8_level2_npc960113935",
+    "arc": 8,
+    "arcName": "Gabriela Silang",
+    "level": 2,
+    "scene": "8-2",
+    "npc": "Tagabaryo / Villager",
+    "number": 3,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "Which colonial power did the Silang uprising resist?",
+      "questionTL": "Aling kolonyal na kapangyarihan ang nilabanan sa pag-aalsa ng mga Silang?",
+      "choices": [
+        "Portugal",
+        "Espanya / Spain",
+        "Japan"
+      ],
+      "correctIndex": 1,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc9_level1_npc498634052",
+    "arc": 9,
+    "arcName": "Sultan Kudarat",
+    "level": 1,
+    "scene": "9-1",
+    "npc": "Tagabaryo / Villager",
+    "number": 1,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "Which sultanate did Sultan Kudarat lead?",
+      "questionTL": "Aling sultanato ang pinamunuan ni Sultan Kudarat?",
+      "choices": [
+        "Maguindanao",
+        "Sulu",
+        "Brunei"
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc9_level1_npc828543484",
+    "arc": 9,
+    "arcName": "Sultan Kudarat",
+    "level": 1,
+    "scene": "9-1",
+    "npc": "Tagabaryo / Villager",
+    "number": 2,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "Which island is associated with his leadership?",
+      "questionTL": "Aling isla ang kaugnay ng kanyang pamumuno?",
+      "choices": [
+        "Luzon",
+        "Mindanao",
+        "Panay"
+      ],
+      "correctIndex": 1,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc9_level1_npc751399164",
+    "arc": 9,
+    "arcName": "Sultan Kudarat",
+    "level": 1,
+    "scene": "9-1",
+    "npc": "Tagabaryo / Villager",
+    "number": 3,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "When did his rule begin?",
+      "questionTL": "Kailan nagsimula ang kanyang pamumuno?",
+      "choices": [
+        "1763",
+        "1896",
+        "1619"
+      ],
+      "correctIndex": 2,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc9_level2_npc1313534190",
+    "arc": 9,
+    "arcName": "Sultan Kudarat",
+    "level": 2,
+    "scene": "9-2",
+    "npc": "Tagabaryo / Villager",
+    "number": 1,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "Which faith did he defend?",
+      "questionTL": "Aling pananampalataya ang kanyang ipinagtanggol?",
+      "choices": [
+        "Buddhism / Budismo",
+        "Hinduism / Hinduismo",
+        "Islam"
+      ],
+      "correctIndex": 2,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc9_level2_npc236067441",
+    "arc": 9,
+    "arcName": "Sultan Kudarat",
+    "level": 2,
+    "scene": "9-2",
+    "npc": "Tagabaryo / Villager",
+    "number": 2,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "Which sultanate became his ally?",
+      "questionTL": "Aling sultanato ang naging kanyang kaalyado?",
+      "choices": [
+        "Brunei",
+        "Sulu",
+        "Malacca"
+      ],
+      "correctIndex": 1,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc9_level2_npc445082770",
+    "arc": 9,
+    "arcName": "Sultan Kudarat",
+    "level": 2,
+    "scene": "9-2",
+    "npc": "Tagabaryo / Villager",
+    "number": 3,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "In what year did he sign the peace agreement?",
+      "questionTL": "Anong taon siya lumagda sa kasunduang pangkapayapaan?",
+      "choices": [
+        "1645",
+        "1763",
+        "1898"
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc10_level1_npc5100000007",
+    "arc": 10,
+    "arcName": "Francisco Dagohoy",
+    "level": 1,
+    "scene": "10-1",
+    "npc": "Tagabaryo / Villager",
+    "number": 1,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "Where did the Dagohoy rebellion take place?",
+      "questionTL": "Saan naganap ang pag-aalsa ni Dagohoy?",
+      "choices": [
+        "Bohol",
+        "Ilocos",
+        "Cavite"
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc10_level1_npc5100000008",
+    "arc": 10,
+    "arcName": "Francisco Dagohoy",
+    "level": 1,
+    "scene": "10-1",
+    "npc": "Tagabaryo / Villager",
+    "number": 2,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "When did the rebellion begin?",
+      "questionTL": "Kailan nagsimula ang pag-aalsa?",
+      "choices": [
+        "1896",
+        "1763",
+        "1744"
+      ],
+      "correctIndex": 2,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc10_level1_npc5100000009",
+    "arc": 10,
+    "arcName": "Francisco Dagohoy",
+    "level": 1,
+    "scene": "10-1",
+    "npc": "Tagabaryo / Villager",
+    "number": 3,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "When did the rebellion end?",
+      "questionTL": "Kailan natapos ang pag-aalsa?",
+      "choices": [
+        "1744",
+        "1829",
+        "1898"
+      ],
+      "correctIndex": 1,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc10_level2_npc5100000017",
+    "arc": 10,
+    "arcName": "Francisco Dagohoy",
+    "level": 2,
+    "scene": "10-2",
+    "npc": "Tagabaryo / Villager",
+    "number": 1,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "About how many years did the rebellion last?",
+      "questionTL": "Humigit-kumulang ilang taon tumagal ang pag-aalsa?",
+      "choices": [
+        "15",
+        "85",
+        "30"
+      ],
+      "correctIndex": 1,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc10_level2_npc5100000018",
+    "arc": 10,
+    "arcName": "Francisco Dagohoy",
+    "level": 2,
+    "scene": "10-2",
+    "npc": "Tagabaryo / Villager",
+    "number": 2,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "What did Dagohoy establish in Bohol?",
+      "questionTL": "Ano ang itinatag ni Dagohoy sa Bohol?",
+      "choices": [
+        "Independent government / Malayang pamahalaan",
+        "Spanish garrison / Garison ng Espanya",
+        "Colonial tax office / Tanggapan ng buwis"
+      ],
+      "correctIndex": 0,
+      "answerOrder": []
+    }
+  },
+  {
+    "id": "arc10_level2_npc5100000019",
+    "arc": 10,
+    "arcName": "Francisco Dagohoy",
+    "level": 2,
+    "scene": "10-2",
+    "npc": "Tagabaryo / Villager",
+    "number": 3,
+    "kind": "choice",
+    "configured": true,
+    "rewardCoins": 100,
+    "defaults": {
+      "questionEN": "What was Francisco Dagohoy's other name?",
+      "questionTL": "Ano ang isa pang pangalan ni Francisco Dagohoy?",
+      "choices": [
+        "Francisco Balagtas",
+        "Francisco Mercado",
+        "Francisco Sendrijas"
+      ],
+      "correctIndex": 2,
+      "answerOrder": []
+    }
+  }
+]
