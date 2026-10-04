@@ -5,10 +5,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const ts = require('typescript');
-function load(file, imports = {}) {
+function load(file, imports = {}, globals = {}) {
   const code = ts.transpileModule(fs.readFileSync(path.join(__dirname,'..',file),'utf8'), {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
   const module = {exports:{}};
-  vm.runInNewContext(code, {module,exports:module.exports,URL,Date,require:key=>{assert.ok(key in imports,key);return imports[key];}});
+  vm.runInNewContext(code, {module,exports:module.exports,URL,Date,console:{error:()=>{}},...globals,require:key=>{assert.ok(key in imports,key);return imports[key];}});
   return module.exports;
 }
 const lib = load('src/lib/resourcePacks.ts');
@@ -23,21 +23,23 @@ function release() {
     {id:'arcs-4-6',fileName:'arcs-4-6.bundle',bytes:123,sha256:'b'.repeat(64),scenes:Array.from({length:9},(_,i)=>`Assets/Scenes/${4+Math.floor(i/3)}-${i%3+1}.unity`)},
     {id:'arcs-7-10',fileName:'arcs-7-10.bundle',bytes:456,sha256:'c'.repeat(64),scenes:Array.from({length:12},(_,i)=>`Assets/${7+Math.floor(i/3)}-${i%3+1}.unity`)}]};
 }
-function harness(role='admin') {
+class R2ConfigurationError extends Error {}
+function harness(role='admin', failures={}) {
   let stored=null, badHead=false; const uploads=[],writes=[];
   class Command {constructor(input){this.input=input;}}
-  const ref={get:async()=>({exists:!!stored,data:()=>stored}),create:async data=>{if(stored)throw Error('exists');stored=data;writes.push(data);}};
+  const ref={get:async()=>{if(failures.lookup)throw failures.lookup;return {exists:!!stored,data:()=>stored};},create:async data=>{if(failures.create)throw failures.create;if(stored)throw Error('exists');stored=data;writes.push(data);}};
   const imports={
     'next/server':{NextResponse:{json:(body,options={})=>({body,status:options.status??200})}},
     '@/lib/auth':{getSessionUser:async()=>role?{role}:null,isAdminRole:r=>['admin','superadmin'].includes(r)},
     '@/lib/firebaseAdmin':{getAdminDb:()=>({collection:()=>({doc:()=>ref})})},
     '@/lib/resourcePacks':lib,
-    '@/lib/r2':{getR2Bucket:()=> 'bucket',getR2PublicUrl:key=>'https://cdn.test/'+key,getR2Client:()=>({send:async command=>{
+    '@/lib/r2':{R2ConfigurationError,getR2Bucket:()=> 'bucket',getR2PublicUrl:key=>'https://cdn.test/'+key,getR2Client:()=>({send:async command=>{
+      if(failures.head)throw failures.head;
       const p=release().packs.find(p=>command.input.Key.includes(p.sha256));
       return {ContentLength:badHead?1:p.bytes,Metadata:{sha256:p.sha256}};
     }})},
     '@aws-sdk/client-s3':{HeadObjectCommand:Command,PutObjectCommand:Command},
-    '@aws-sdk/s3-request-presigner':{getSignedUrl:async(client,command)=>{uploads.push(command.input);return 'https://signed.test/upload';}},
+    '@aws-sdk/s3-request-presigner':{getSignedUrl:async(client,command)=>{if(failures.sign)throw failures.sign;uploads.push(command.input);return 'https://signed.test/upload';}},
   };
   const admin=load('src/app/api/admin/resource-packs/route.ts',imports), game=load('src/app/api/game/resource-packs/route.ts',imports);
   return {admin,game,uploads,writes,badHead:()=>badHead=true,
@@ -89,4 +91,38 @@ test('new release uploads and public response preserve schema 2 and new pack ide
   assert.equal((await h.post('publish',r)).status,200);
   const result=await h.game.GET(new Request('https://game.test/api/game/resource-packs?build='+r.buildId));
   assert.equal(result.body.schema,2);assert.equal(result.body.packs[0].id,'arcs-2-6');assert.equal(result.body.packs[0].scenes.length,15);
+});
+
+test('missing configuration names are actionable and never include configured secrets',()=>{
+  const r2=load('src/lib/r2.ts',{'@aws-sdk/client-s3':{S3Client:class {}}},
+    {process:{env:{R2_ACCOUNT_ID:'account',R2_SECRET_ACCESS_KEY:'private-secret',R2_BUCKET_NAME:'bucket',R2_ACCESS_KEY_ID:'   '}}});
+  assert.throws(()=>r2.getR2Bucket(),error=>{
+    assert.ok(error instanceof r2.R2ConfigurationError);
+    assert.match(error.message,/R2_ACCESS_KEY_ID, R2_PUBLIC_BASE_URL/);
+    assert.match(error.message,/redeploy/);assert.ok(!error.message.includes('private-secret'));return true;
+  });
+});
+
+test('reports configuration failure rather than generic upload failure',async()=>{
+  const result=await harness('admin',{sign:new R2ConfigurationError('Missing website settings: R2_PUBLIC_BASE_URL.')}).post('upload');
+  assert.equal(result.status,503);assert.equal(result.body.code,'R2_CONFIGURATION');assert.match(result.body.error,/R2_PUBLIC_BASE_URL/);
+});
+
+test('distinguishes database failure, rejected storage access, and missing pack without exposing SDK details',async()=>{
+  for(const [failures,action,code,pattern] of [
+    [{lookup:Error('private-secret')},'upload','RELEASE_LOOKUP',/database/],
+    [{sign:Error('private-secret')},'upload','UPLOAD_PREPARATION',/upload preparation/],
+    [{head:{$metadata:{httpStatusCode:403},message:'private-secret'}},'publish','STORAGE_VERIFICATION',/Storage rejected access/],
+    [{head:{name:'NotFound',message:'private-secret'}},'publish','STORAGE_VERIFICATION',/not found/],
+    [{create:Error('private-secret')},'publish','RELEASE_PUBLICATION',/database/],
+  ]){
+    const result=await harness('admin',failures).post(action);
+    assert.equal(result.status,503);assert.equal(result.body.code,code);assert.match(result.body.error,pattern);
+    assert.ok(!JSON.stringify(result).includes('private-secret'));
+  }
+});
+
+test('concurrent publication conflict tells admin to refresh',async()=>{
+  const result=await harness('admin',{create:{code:6}}).post('publish');
+  assert.equal(result.status,409);assert.match(result.body.error,/already published/);
 });

@@ -1,5 +1,11 @@
 # CLAUDE.md
 
+## Resource pack upload diagnostics - 2026-10-04
+
+- Replaced the generic prepare/publish error with separate upload preparation, database lookup/publication, storage access and missing-object errors. Missing R2 settings are listed by variable name only, with hosting environment/redeploy instructions; credential values and raw SDK errors are never returned or logged.
+- R2 settings now trim surrounding whitespace. Publication remains immutable and still requires matching uploaded sizes and hash metadata. Concurrent publication conflicts return 409 and prompt a refresh.
+- Resource-pack tests: 14 passed, including missing configuration, database failure, storage 403/404, secret redaction and concurrent publication. Live failure is not diagnosed until the updated website is deployed and retried; no APK rebuild is required for these diagnostics.
+
 This file gives Claude project-specific instructions for working in this repository.
 
 ## Mobile top-up deployment verification - 2026-09-19
