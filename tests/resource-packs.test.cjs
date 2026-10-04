@@ -7,9 +7,9 @@ const vm = require('node:vm');
 const ts = require('typescript');
 function load(file, imports = {}, globals = {}) {
   const code = ts.transpileModule(fs.readFileSync(path.join(__dirname,'..',file),'utf8'), {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
-  const module = {exports:{}};
-  vm.runInNewContext(code, {module,exports:module.exports,URL,Date,console:{error:()=>{}},...globals,require:key=>{assert.ok(key in imports,key);return imports[key];}});
-  return module.exports;
+  const compiledModule = {exports:{}};
+  vm.runInNewContext(code, {module:compiledModule,exports:compiledModule.exports,URL,Date,console:{error:()=>{}},...globals,require:key=>{assert.ok(key in imports,key);return imports[key];}});
+  return compiledModule.exports;
 }
 const lib = load('src/lib/resourcePacks.ts');
 function arcOneRelease() {
