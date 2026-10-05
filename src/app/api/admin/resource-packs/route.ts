@@ -1,13 +1,26 @@
 import { NextResponse } from "next/server";
-import { HeadObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { HeadObjectCommand, PutObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getSessionUser, isAdminRole } from "@/lib/auth";
 import { getAdminDb } from "@/lib/firebaseAdmin";
 import { getR2Bucket, getR2Client, R2ConfigurationError } from "@/lib/r2";
-import { packKey, validateRelease } from "@/lib/resourcePacks";
+import { packKey, validateRelease, type ChapterRelease, type PackUploadStatus } from "@/lib/resourcePacks";
 
 export const runtime = "nodejs";
 const headers = { "Cache-Control": "no-store" };
+async function packStatus(release: ChapterRelease): Promise<PackUploadStatus[]> {
+  return Promise.all(release.packs.map(async pack => {
+    const base = { id: pack.id, fileName: pack.fileName, expectedBytes: pack.bytes };
+    try {
+      const object = await getR2Client().send(new HeadObjectCommand({ Bucket: getR2Bucket(), Key: packKey(release, pack) }));
+      return { ...base, storedBytes: object.ContentLength,
+        state: object.ContentLength !== pack.bytes ? "size-mismatch" : object.Metadata?.sha256 !== pack.sha256 ? "metadata-mismatch" : "ready" };
+    } catch (error) {
+      const detail = error as { name?: string; $metadata?: { httpStatusCode?: number } };
+      return { ...base, state: detail?.$metadata?.httpStatusCode === 404 || ["NotFound", "NoSuchKey"].includes(detail?.name ?? "") ? "missing" : "unavailable" };
+    }
+  }));
+}
 async function authorize() {
   const user = await getSessionUser();
   return !user ? NextResponse.json({ error: "Authentication required." }, { status: 401, headers })
@@ -16,8 +29,25 @@ async function authorize() {
 export async function GET() {
   const denied = await authorize(); if (denied) return denied;
   try {
-    const result = await getAdminDb().collection("chapterReleases").orderBy("publishedAt", "desc").limit(20).get();
-    return NextResponse.json({ releases: result.docs.map(d => ({ buildId: d.id, appVersion: d.data().appVersion, publishedAt: d.data().publishedAt })) }, { headers });
+    const db = getAdminDb();
+    const [result, saved] = await Promise.all([
+      db.collection("chapterReleases").orderBy("publishedAt", "desc").limit(20).get(),
+      db.collection("chapterReleaseDrafts").orderBy("updatedAt", "desc").limit(20).get(),
+    ]);
+    const drafts = (await Promise.all(saved.docs.map(async d => {
+      if ((await db.collection("chapterReleases").doc(d.id).get()).exists) return null;
+      const release = validateRelease(d.data().release);
+      return { release, updatedAt: d.data().updatedAt, packs: await packStatus(release) };
+    }))).filter(d => d !== null);
+    const known = new Set([...result.docs.map(d => d.id), ...saved.docs.map(d => d.id)]);
+    let storageOnly: string[] = [], storageWarning = "";
+    try {
+      const objects = await getR2Client().send(new ListObjectsV2Command({ Bucket: getR2Bucket(), Prefix: "chapters/", Delimiter: "/", MaxKeys: 100 }));
+      const candidates = (objects.CommonPrefixes ?? []).map(p => /^chapters\/([a-f0-9]{32})\/$/.exec(p.Prefix ?? "")?.[1]).filter((id): id is string => !!id && !known.has(id));
+      storageOnly = (await Promise.all(candidates.map(async id => (await db.collection("chapterReleases").doc(id).get()).exists ? null : id))).filter((id): id is string => id !== null);
+      if (objects.IsTruncated) storageWarning = "Showing the first 100 storage folders. Select a matching release.json to open another release.";
+    } catch { storageWarning = "Could not scan storage for older uploads. Saved releases are shown below; check storage access and refresh."; }
+    return NextResponse.json({ releases: result.docs.map(d => ({ buildId: d.id, appVersion: d.data().appVersion, publishedAt: d.data().publishedAt })), drafts, storageOnly, storageWarning }, { headers });
   } catch { return NextResponse.json({ error: "Could not load releases." }, { status: 503, headers }); }
 }
 export async function POST(request: Request) {
@@ -30,11 +60,21 @@ export async function POST(request: Request) {
   let release, action;
   try { const body = JSON.parse(raw); release = validateRelease(body.release); action = body.action; }
   catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Invalid manifest." }, { status: 400, headers }); }
-  if (action !== "upload" && action !== "publish") return NextResponse.json({ error: "Invalid action." }, { status: 400, headers });
+  if (action !== "upload" && action !== "publish" && action !== "inspect") return NextResponse.json({ error: "Invalid action." }, { status: 400, headers });
   let stage = "release lookup";
   try {
     const ref = getAdminDb().collection("chapterReleases").doc(release.buildId);
     if ((await ref.get()).exists) return NextResponse.json({ error: "This release is already published. Build a new release for changes." }, { status: 409, headers });
+    if (action === "inspect" || action === "upload") {
+      stage = "draft registration";
+      const draft = getAdminDb().collection("chapterReleaseDrafts").doc(release.buildId);
+      const savedDraft = await draft.get();
+      if (savedDraft.exists && JSON.stringify(validateRelease(savedDraft.data()?.release)) !== JSON.stringify(release))
+        return NextResponse.json({ error: "This build ID already has a different release.json. Use its original manifest, or build a new release for changed resources." }, { status: 409, headers });
+      // Register before uploading so a closed tab or interrupted PUT remains recoverable.
+      await draft.set({ release, updatedAt: new Date().toISOString() });
+      if (action === "inspect") return NextResponse.json({ release, packs: await packStatus(release) }, { headers });
+    }
     if (action === "upload") {
       stage = "upload preparation";
       const uploads = await Promise.all(release.packs.map(async pack => ({
@@ -74,7 +114,7 @@ export async function POST(request: Request) {
       status: details?.$metadata?.httpStatusCode });
     let message = `Could not complete ${stage}. Check the website server logs for this release.`;
     let status = 503;
-    if (stage === "release lookup" || stage === "release publication") {
+    if (stage === "release lookup" || stage === "release publication" || stage === "draft registration") {
       message = `Could not complete ${stage} in the game database. Check the website's server database access.`;
       if (stage === "release publication" && (details?.code === 6 || details?.code === "already-exists")) {
         message = "This release is already published. Refresh the page to see it."; status = 409;

@@ -1,5 +1,12 @@
 # CLAUDE.md
 
+## Saved uploads and release management - 2026-10-05
+
+- Resource Packs now has an Uploaded releases section with per-pack storage status, Refresh uploads, Publish release and Replace files for unpublished releases. Drafts persist in chapterReleaseDrafts, registered before signing upload URLs; selecting release.json also registers/checks existing uploads. Only chapterReleases is public to the game, and publication still verifies sizes/hash metadata.
+- Admin GET lists the latest 20 drafts and published releases and scans up to 100 chapters/<buildId>/ storage prefixes for legacy uploads. Older unregistered folders show Link release.json, since R2 bundle names alone cannot recover scene lists. The manifest must match the selected folder. A scan failure is visible and does not hide saved drafts. A truncated scan displays a limit notice; any release can still be opened by selecting its manifest.
+- Replacement reuses the same pack keys and original manifest; changed manifest content under an existing draft ID is rejected. Published releases remain immutable. Future resource changes require a new Unity release and matching APK. No storage objects or published releases are deleted.
+- 23 resource-pack tests passed, covering durable drafts, failed upload recovery, legacy linking, publish-after-reload, replacement, status errors, storage scan outage and access control. Local R2 credentials are absent, so no live upload/publication was performed. Deploy the admin website to use this feature; no APK rebuild required.
+
 ## Resource pack metadata upload - 2026-10-05
 
 - Screenshot_20 shows successful browser PUTs followed by publication rejection. The old combined error cannot distinguish size mismatch from missing/different metadata. Live object HEAD could not be inspected because local R2 credentials are absent; the precise production mismatch remains unconfirmed.

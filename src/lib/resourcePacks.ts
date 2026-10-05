@@ -34,3 +34,5 @@ export function validateRelease(input: unknown): ChapterRelease {
   });
   return { schema: raw.schema, buildId: raw.buildId, platform: "Android", appVersion: raw.appVersion, packs: packs.sort((a, b) => a.id.localeCompare(b.id)) };
 }
+export type PackUploadStatus = { id: string; fileName: string; expectedBytes: number; storedBytes?: number; state: "ready" | "missing" | "size-mismatch" | "metadata-mismatch" | "unavailable" };
+export type UploadedRelease = { release: ChapterRelease; updatedAt: string; packs: PackUploadStatus[] };
