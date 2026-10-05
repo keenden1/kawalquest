@@ -1,5 +1,12 @@
 # CLAUDE.md
 
+## Resource pack metadata upload - 2026-10-05
+
+- Screenshot_20 shows successful browser PUTs followed by publication rejection. The old combined error cannot distinguish size mismatch from missing/different metadata. Live object HEAD could not be inspected because local R2 credentials are absent; the precise production mismatch remains unconfirmed.
+- Upload API now returns Content-Type, Cache-Control and x-amz-meta-sha256 headers; the browser sends all of them. SHA metadata is explicitly unhoistable and signed so it is sent as an HTTP header, not only a URL parameter. Size and metadata checks remain required, with separate errors identifying the pack. Clear stale success text when publication fails.
+- Before using the updated uploader, add x-amz-meta-sha256 and Cache-Control alongside Content-Type in the bucket CORS AllowedHeaders. Preserve existing origins/methods/rules. Deploy the updated website, refresh, upload the existing matching bundles again, then publish; no Unity/APK rebuild needed.
+- All 17 resource-pack tests passed, including real installed SDK signing without network calls and separate size/metadata rejection cases. Live publication has not been verified.
+
 ## Resource pack upload diagnostics - 2026-10-04
 
 - Replaced the generic prepare/publish error with separate upload preparation, database lookup/publication, storage access and missing-object errors. Missing R2 settings are listed by variable name only, with hosting environment/redeploy instructions; credential values and raw SDK errors are never returned or logged.

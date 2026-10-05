@@ -7,13 +7,13 @@ async function post(action: string, release: ChapterRelease) {
   const response = await fetch("/api/admin/resource-packs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, release }) });
   const result = await response.json(); if (!response.ok) throw Error(result.error ?? "Request failed."); return result;
 }
-function upload(url: string, file: File, progress: (fraction: number) => void) {
+function upload(url: string, file: File, headers: Record<string, string>, progress: (fraction: number) => void) {
   return new Promise<void>((resolve, reject) => {
     const request = new XMLHttpRequest(); request.open("PUT", url);
-    request.setRequestHeader("Content-Type", "application/octet-stream");
+    for (const [name, value] of Object.entries(headers)) request.setRequestHeader(name, value);
     request.upload.onprogress = event => { if (event.lengthComputable) progress(event.loaded / event.total); };
     request.onload = () => request.status >= 200 && request.status < 300 ? resolve() : reject(Error("Upload failed. Check storage CORS and retry."));
-    request.onerror = () => reject(Error("Upload interrupted. Check your connection and retry."));
+    request.onerror = () => reject(Error("Upload interrupted or blocked by storage CORS. Allow Content-Type, x-amz-meta-sha256 and Cache-Control for your website origin, then retry."));
     request.onabort = () => reject(Error("Upload cancelled."));
     request.send(file);
   });
@@ -43,24 +43,25 @@ export default function ResourcePacksEditor() {
     catch (e) { setError(e instanceof Error ? e.message : "Invalid release file."); }
   }
   async function uploadPacks() {
-    if (!release) return; setBusy(true); setError(""); setUploaded(false);
+    if (!release) return; setBusy(true); setError(""); setStatus(""); setUploaded(false);
     try {
       for (const pack of release.packs) {
         const file = files[pack.id];
         if (!file || file.name !== pack.fileName || file.size !== pack.bytes) throw Error(`Choose the matching ${pack.fileName} from the release folder.`);
       }
       const data = await post("upload", release);
-      for (const item of data.uploads as { id: string; uploadUrl: string }[]) {
-        await upload(item.uploadUrl, files[item.id], fraction => setStatus(`${item.id === "arcs-7-10" ? "Pack 2" : "Pack 1"}: ${Math.round(fraction * 100)}% uploaded`));
+      for (const item of data.uploads as { id: string; uploadUrl: string; headers: Record<string, string> }[]) {
+        if (!item.headers?.["x-amz-meta-sha256"]) throw Error("The upload API needs updating. Deploy the latest website changes and refresh this page.");
+        await upload(item.uploadUrl, files[item.id], item.headers, fraction => setStatus(`${item.id === "arcs-7-10" ? "Pack 2" : "Pack 1"}: ${Math.round(fraction * 100)}% uploaded`));
       }
       setUploaded(true); setStatus("Both packs uploaded. Publish when ready.");
-    } catch (e) { setError(e instanceof Error ? e.message : "Upload failed."); }
+    } catch (e) { setStatus(""); setError(e instanceof Error ? e.message : "Upload failed."); }
     finally { setBusy(false); }
   }
   async function publish() {
-    if (!release) return; setBusy(true); setError("");
+    if (!release) return; setBusy(true); setError(""); setStatus("Verifying uploaded packs...");
     try { await post("publish", release); setPublished(true); setStatus("Published. You can now upload the matching APK under Game Controls."); await refresh(); }
-    catch (e) { setError(e instanceof Error ? e.message : "Publish failed."); }
+    catch (e) { setStatus(""); setError(e instanceof Error ? e.message : "Publish failed."); }
     finally { setBusy(false); }
   }
   const style = "rounded-xl border border-white/15 bg-white/5 p-4";

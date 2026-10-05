@@ -25,7 +25,7 @@ function release() {
 }
 class R2ConfigurationError extends Error {}
 function harness(role='admin', failures={}) {
-  let stored=null, badHead=false; const uploads=[],writes=[];
+  let stored=null, badHead=false; const uploads=[],writes=[],signing=[];
   class Command {constructor(input){this.input=input;}}
   const ref={get:async()=>{if(failures.lookup)throw failures.lookup;return {exists:!!stored,data:()=>stored};},create:async data=>{if(failures.create)throw failures.create;if(stored)throw Error('exists');stored=data;writes.push(data);}};
   const imports={
@@ -36,13 +36,13 @@ function harness(role='admin', failures={}) {
     '@/lib/r2':{R2ConfigurationError,getR2Bucket:()=> 'bucket',getR2PublicUrl:key=>'https://cdn.test/'+key,getR2Client:()=>({send:async command=>{
       if(failures.head)throw failures.head;
       const p=release().packs.find(p=>command.input.Key.includes(p.sha256));
-      return {ContentLength:badHead?1:p.bytes,Metadata:{sha256:p.sha256}};
+      return {ContentLength:badHead?1:p.bytes,Metadata:failures.metadata ?? {sha256:p.sha256}};
     }})},
     '@aws-sdk/client-s3':{HeadObjectCommand:Command,PutObjectCommand:Command},
-    '@aws-sdk/s3-request-presigner':{getSignedUrl:async(client,command)=>{if(failures.sign)throw failures.sign;uploads.push(command.input);return 'https://signed.test/upload';}},
+    '@aws-sdk/s3-request-presigner':{getSignedUrl:async(client,command,options)=>{if(failures.sign)throw failures.sign;uploads.push(command.input);signing.push(options);return 'https://signed.test/upload';}},
   };
   const admin=load('src/app/api/admin/resource-packs/route.ts',imports), game=load('src/app/api/game/resource-packs/route.ts',imports);
-  return {admin,game,uploads,writes,badHead:()=>badHead=true,
+  return {admin,game,uploads,writes,signing,badHead:()=>badHead=true,
     post:(action,r=release(),extra={})=>admin.POST(new Request('https://game.test/api/admin/resource-packs',{method:'POST',headers:{'Content-Type':'application/json',...extra},body:JSON.stringify({action,release:r})}))};
 }
 test('3/3/4 release accepts 9 and 12 remote scenes, including legacy 5-1(1)',()=>{
@@ -125,4 +125,39 @@ test('distinguishes database failure, rejected storage access, and missing pack 
 test('concurrent publication conflict tells admin to refresh',async()=>{
   const result=await harness('admin',{create:{code:6}}).post('publish');
   assert.equal(result.status,409);assert.match(result.body.error,/already published/);
+});
+
+test('browser upload contract sends matching signed metadata and cache headers',async()=>{
+  const h=harness(),result=await h.post('upload');
+  for(let i=0;i<2;i++){
+    const headers=result.body.uploads[i].headers;
+    assert.equal(headers['x-amz-meta-sha256'],h.uploads[i].Metadata.sha256);
+    assert.equal(headers['Cache-Control'],h.uploads[i].CacheControl);
+    assert.equal(headers['Content-Type'],h.uploads[i].ContentType);
+    assert.ok(h.signing[i].unhoistableHeaders.has('x-amz-meta-sha256'));
+    assert.ok(h.signing[i].signableHeaders.has('cache-control'));
+  }
+});
+
+test('real SDK keeps SHA metadata in signed headers instead of URL parameters',async()=>{
+  const {S3Client,PutObjectCommand}=require('@aws-sdk/client-s3');
+  const {getSignedUrl}=require('@aws-sdk/s3-request-presigner');
+  const h=harness();await h.post('upload');
+  const client=new S3Client({region:'auto',endpoint:'https://example.r2.cloudflarestorage.com',
+    credentials:{accessKeyId:'test-access-key',secretAccessKey:'test-secret'}});
+  try{
+    const url=new URL(await getSignedUrl(client,new PutObjectCommand(h.uploads[0]),h.signing[0]));
+    assert.equal(url.searchParams.has('x-amz-meta-sha256'),false);
+    const signed=url.searchParams.get('X-Amz-SignedHeaders').split(';');
+    for(const name of ['x-amz-meta-sha256','content-type','cache-control'])assert.ok(signed.includes(name));
+  }finally{client.destroy();}
+});
+
+test('publication distinguishes wrong size from missing or incorrect metadata',async()=>{
+  const h=harness();h.badHead();
+  const size=await h.post('publish');assert.equal(size.body.code,'PACK_SIZE_MISMATCH');assert.match(size.body.error,/1 bytes; expected 123/);
+  for(const metadata of [{},{sha256:'wrong'}]){
+    const h=harness('admin',{metadata}),result=await h.post('publish');
+    assert.equal(result.status,400);assert.equal(result.body.code,'PACK_METADATA_MISMATCH');assert.match(result.body.error,/arcs-4-6.bundle/);assert.equal(h.writes.length,0);
+  }
 });

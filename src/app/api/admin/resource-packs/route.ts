@@ -39,10 +39,13 @@ export async function POST(request: Request) {
       stage = "upload preparation";
       const uploads = await Promise.all(release.packs.map(async pack => ({
         id: pack.id, fileName: pack.fileName,
+        headers: { "Content-Type": "application/octet-stream", "x-amz-meta-sha256": pack.sha256,
+          "Cache-Control": "public, max-age=31536000, immutable" },
         uploadUrl: await getSignedUrl(getR2Client(), new PutObjectCommand({ Bucket: getR2Bucket(), Key: packKey(release, pack),
           ContentType: "application/octet-stream", ContentLength: pack.bytes, CacheControl: "public, max-age=31536000, immutable",
           Metadata: { sha256: pack.sha256 },
-        }), { expiresIn: 3600 }),
+        }), { expiresIn: 3600, unhoistableHeaders: new Set(["x-amz-meta-sha256"]),
+          signableHeaders: new Set(["content-type", "cache-control"]) }),
       })));
       return NextResponse.json({ uploads }, { headers });
     }
@@ -51,8 +54,10 @@ export async function POST(request: Request) {
     stage = "storage verification";
     for (const pack of release.packs) {
       const object = await getR2Client().send(new HeadObjectCommand({ Bucket: getR2Bucket(), Key: packKey(release, pack) }));
-      if (object.ContentLength !== pack.bytes || object.Metadata?.sha256 !== pack.sha256)
-        return NextResponse.json({ error: "Pack upload is incomplete or does not match the release. Upload both files again." }, { status: 400, headers });
+      if (object.ContentLength !== pack.bytes)
+        return NextResponse.json({ error: `${pack.fileName}: stored size is ${object.ContentLength ?? "unknown"} bytes; expected ${pack.bytes} bytes. Upload the matching file from this release folder again.`, code: "PACK_SIZE_MISMATCH" }, { status: 400, headers });
+      if (object.Metadata?.sha256 !== pack.sha256)
+        return NextResponse.json({ error: `${pack.fileName}: SHA-256 upload metadata is ${object.Metadata?.sha256 ? "different from this release" : "missing"}. Refresh the updated admin page and upload both files again. Allow x-amz-meta-sha256 and Cache-Control in the bucket CORS policy.`, code: "PACK_METADATA_MISMATCH" }, { status: 400, headers });
     }
     // create() prevents two admins from overwriting the same release in a race.
     stage = "release publication";
