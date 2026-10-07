@@ -24,7 +24,7 @@ function release() {
     {id:'arcs-7-10',fileName:'arcs-7-10.bundle',bytes:456,sha256:'c'.repeat(64),scenes:Array.from({length:12},(_,i)=>`Assets/${7+Math.floor(i/3)}-${i%3+1}.unity`)}]};
 }
 class R2ConfigurationError extends Error {}
-function harness(role='admin', failures={}) {
+function harness(role='superadmin', failures={}) {
   let stored=null, badHead=false; const uploads=[],writes=[],signing=[],drafts=new Map();
   class Command {constructor(input){this.input=input;}}
   class ListCommand extends Command {}
@@ -63,8 +63,13 @@ test('reject malformed ids, sizes, hashes, incomplete and misplaced scenes',()=>
     r=>r.packs[0].scenes[0]='Assets/../4-1.unity',r=>r.packs[0].scenes[1]=r.packs[0].scenes[0],r=>r.packs[1]=r.packs[0]];
   for(const mutate of mutations){const r=release();mutate(r);assert.throws(()=>lib.validateRelease(r));}
 });
-test('admin upload/publish requires role and same origin',async()=>{
-  for(const role of [null,'user','tester']){const h=harness(role);assert.equal((await h.post('upload')).status,role?403:401);assert.equal(h.uploads.length,0);}
+test('resource pack listing, inspection, upload and publishing require superadmin',async()=>{
+  for(const role of [null,'user','tester','admin']){
+    const h=harness(role);
+    assert.equal((await h.admin.GET()).status,role?403:401);
+    for(const action of ['inspect','upload','publish']) assert.equal((await h.post(action)).status,role?403:401);
+    assert.equal(h.uploads.length,0); assert.equal(h.writes.length,0);
+  }
   assert.equal((await harness().post('upload',release(),{Origin:'https://evil.test'})).status,403);
 });
 test('uploads use immutable release keys and expected size/hash metadata',async()=>{
@@ -113,7 +118,7 @@ test('missing configuration names are actionable and never include configured se
 });
 
 test('reports configuration failure rather than generic upload failure',async()=>{
-  const result=await harness('admin',{sign:new R2ConfigurationError('Missing website settings: R2_PUBLIC_BASE_URL.')}).post('upload');
+  const result=await harness('superadmin',{sign:new R2ConfigurationError('Missing website settings: R2_PUBLIC_BASE_URL.')}).post('upload');
   assert.equal(result.status,503);assert.equal(result.body.code,'R2_CONFIGURATION');assert.match(result.body.error,/R2_PUBLIC_BASE_URL/);
 });
 
@@ -125,14 +130,14 @@ test('distinguishes database failure, rejected storage access, and missing pack 
     [{head:{name:'NotFound',message:'private-secret'}},'publish','STORAGE_VERIFICATION',/not found/],
     [{create:Error('private-secret')},'publish','RELEASE_PUBLICATION',/database/],
   ]){
-    const result=await harness('admin',failures).post(action);
+    const result=await harness('superadmin',failures).post(action);
     assert.equal(result.status,503);assert.equal(result.body.code,code);assert.match(result.body.error,pattern);
     assert.ok(!JSON.stringify(result).includes('private-secret'));
   }
 });
 
 test('concurrent publication conflict tells admin to refresh',async()=>{
-  const result=await harness('admin',{create:{code:6}}).post('publish');
+  const result=await harness('superadmin',{create:{code:6}}).post('publish');
   assert.equal(result.status,409);assert.match(result.body.error,/already published/);
 });
 
@@ -166,7 +171,7 @@ test('publication distinguishes wrong size from missing or incorrect metadata',a
   const h=harness();h.badHead();
   const size=await h.post('publish');assert.equal(size.body.code,'PACK_SIZE_MISMATCH');assert.match(size.body.error,/1 bytes; expected 123/);
   for(const metadata of [{},{sha256:'wrong'}]){
-    const h=harness('admin',{metadata}),result=await h.post('publish');
+    const h=harness('superadmin',{metadata}),result=await h.post('publish');
     assert.equal(result.status,400);assert.equal(result.body.code,'PACK_METADATA_MISMATCH');assert.match(result.body.error,/arcs-4-6.bundle/);assert.equal(h.writes.length,0);
   }
 });
@@ -183,14 +188,14 @@ test('uploaded draft survives reload, can be published later, and then leaves dr
 });
 
 test('older storage folders appear and linking a manifest needs no bundle upload',async()=>{
-  const h=harness('admin',{folders:[release().buildId,'not-a-build-id']});
+  const h=harness('superadmin',{folders:[release().buildId,'not-a-build-id']});
   const before=await h.admin.GET();assert.equal(before.body.storageOnly.length,1);assert.equal(before.body.storageOnly[0],release().buildId);
   assert.equal((await h.post('inspect')).status,200);assert.equal(h.uploads.length,0);assert.equal(h.writes.length,0);
   const after=await h.admin.GET();assert.equal(after.body.storageOnly.length,0);assert.equal(after.body.drafts.length,1);
 });
 
 test('draft registration persists even when signing fails, and replacement keeps one draft',async()=>{
-  const failures={sign:Error('signing failed')},h=harness('admin',failures);
+  const failures={sign:Error('signing failed')},h=harness('superadmin',failures);
   assert.equal((await h.post('upload')).status,503);assert.equal(h.drafts.size,1);
   delete failures.sign;
   assert.equal((await h.post('upload')).status,200);assert.equal(h.drafts.size,1);
@@ -202,7 +207,7 @@ test('draft statuses distinguish missing, mismatched and unavailable objects',as
   for(const [failures,state] of [
     [{head:{name:'NotFound'}},'missing'],[{head:{name:'AccessDenied'}},'unavailable'],[{metadata:{}},'metadata-mismatch']
   ]){
-    const h=harness('admin',failures);const result=await h.post('inspect');assert.equal(result.status,200);
+    const h=harness('superadmin',failures);const result=await h.post('inspect');assert.equal(result.status,200);
     assert.ok(result.body.packs.every(p=>p.state===state));
     const list=await h.admin.GET();assert.ok(list.body.drafts[0].packs.every(p=>p.state===state));
     assert.notEqual((await h.post('publish')).status,200);assert.equal(h.writes.length,0);
@@ -211,10 +216,10 @@ test('draft statuses distinguish missing, mismatched and unavailable objects',as
 });
 
 test('storage scan failures preserve saved drafts and report a warning',async()=>{
-  const h=harness('admin',{list:Error('private-secret')});await h.post('inspect');
+  const h=harness('superadmin',{list:Error('private-secret')});await h.post('inspect');
   const result=await h.admin.GET();assert.equal(result.status,200);assert.equal(result.body.drafts.length,1);
   assert.match(result.body.storageWarning,/Could not scan storage/);assert.ok(!JSON.stringify(result).includes('private-secret'));
-  const truncated=await harness('admin',{truncated:true}).admin.GET();assert.match(truncated.body.storageWarning,/first 100/);
+  const truncated=await harness('superadmin',{truncated:true}).admin.GET();assert.match(truncated.body.storageWarning,/first 100/);
 });
 
 test('listing and registering drafts require admin access and same origin',async()=>{

@@ -9,7 +9,8 @@ const PAGE_SIZE = 10;
 
 export type ManagedUser = { uid: string; email: string; name: string; role: Role; disabled: boolean };
 
-export default function RoleManager({ initialUsers, currentUid }: { initialUsers: ManagedUser[]; currentUid: string }) {
+export default function RoleManager({ initialUsers, currentUid, canManageSuperadmins = false }: { initialUsers: ManagedUser[]; currentUid: string; canManageSuperadmins?: boolean }) {
+  const availableRoles = ROLES.filter(role => canManageSuperadmins || role !== "superadmin");
   const [users, setUsers] = useState(initialUsers);
   const [roleDrafts, setRoleDrafts] = useState<Record<string, Role>>(() =>
     Object.fromEntries(initialUsers.map((user) => [user.uid, user.role]))
@@ -56,7 +57,7 @@ export default function RoleManager({ initialUsers, currentUid }: { initialUsers
   return (
     <div className="game-panel overflow-hidden rounded-2xl">
       <div className="flex flex-col gap-3 border-b border-white/7 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <div><h2 className="font-bold text-white">Player accounts</h2><p className="mt-0.5 text-xs text-stone-500">Only superadmins can change access roles</p></div>
+        <div><h2 className="font-bold text-white">Player accounts</h2><p className="mt-0.5 text-xs text-stone-500">{canManageSuperadmins ? "Manage all account roles" : "Manage player, tester, and admin roles"}</p></div>
         <div className="flex items-center gap-3">
           <SearchInput value={search} onChange={changeSearch} placeholder="Search users..." />
           <span className="shrink-0 rounded-full bg-amber-300/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-300">{users.length} accounts</span>
@@ -70,7 +71,7 @@ export default function RoleManager({ initialUsers, currentUid }: { initialUsers
               const selectedRole = roleDrafts[user.uid] ?? user.role;
               const hasChanges = selectedRole !== user.role;
               const isSaving = savingUid === user.uid;
-              return <tr key={user.uid} className="hover:bg-white/3"><td className="px-5 py-4"><p className="font-bold text-stone-200">{user.name}</p><p className="mt-1 text-xs text-stone-600">{user.email}</p></td><td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${user.disabled ? "bg-red-400/10 text-red-300" : "bg-emerald-400/10 text-emerald-300"}`}>{user.disabled ? "Disabled" : "Active"}</span></td><td className="px-5 py-4"><div className="flex items-center gap-2"><select value={selectedRole} disabled={user.uid === currentUid || isSaving} onChange={(event) => { setRoleDrafts((current) => ({ ...current, [user.uid]: event.target.value as Role })); setFeedback(null); }} className="rounded-xl border border-white/10 bg-[#0a1711] px-3 py-2 text-xs font-bold capitalize text-stone-200 disabled:cursor-not-allowed disabled:opacity-50" aria-label={`Role for ${user.email}`}>{ROLES.map((role) => <option key={role} value={role}>{role}</option>)}</select>{user.uid === currentUid ? <span className="text-[10px] text-stone-600">You</span> : <button type="button" onClick={() => saveRole(user)} disabled={!hasChanges || isSaving} className="rounded-xl bg-amber-300 px-3 py-2 text-xs font-black text-[#172018] hover:bg-amber-200 disabled:cursor-not-allowed disabled:bg-white/5 disabled:text-stone-600">{isSaving ? "Saving..." : "Save"}</button>}</div></td></tr>;
+              return <tr key={user.uid} className="hover:bg-white/3"><td className="px-5 py-4"><p className="font-bold text-stone-200">{user.name}</p><p className="mt-1 text-xs text-stone-600">{user.email}</p></td><td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${user.disabled ? "bg-red-400/10 text-red-300" : "bg-emerald-400/10 text-emerald-300"}`}>{user.disabled ? "Disabled" : "Active"}</span></td><td className="px-5 py-4"><div className="flex items-center gap-2"><select value={selectedRole} disabled={user.uid === currentUid || isSaving} onChange={(event) => { setRoleDrafts((current) => ({ ...current, [user.uid]: event.target.value as Role })); setFeedback(null); }} className="rounded-xl border border-white/10 bg-[#0a1711] px-3 py-2 text-xs font-bold capitalize text-stone-200 disabled:cursor-not-allowed disabled:opacity-50" aria-label={`Role for ${user.email}`}>{availableRoles.map((role) => <option key={role} value={role}>{role === "user" ? "Player" : role}</option>)}</select>{user.uid === currentUid ? <span className="text-[10px] text-stone-600">You</span> : <button type="button" onClick={() => saveRole(user)} disabled={!hasChanges || isSaving} className="rounded-xl bg-amber-300 px-3 py-2 text-xs font-black text-[#172018] hover:bg-amber-200 disabled:cursor-not-allowed disabled:bg-white/5 disabled:text-stone-600">{isSaving ? "Saving..." : "Save"}</button>}</div></td></tr>;
             })}
             {filteredUsers.length === 0 && (
               <tr><td colSpan={3} className="px-5 py-10 text-center text-stone-500">No users match &quot;{search}&quot;.</td></tr>

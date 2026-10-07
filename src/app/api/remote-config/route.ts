@@ -19,6 +19,7 @@ export async function GET() {
       aboutCredits: typeof data?.aboutCredits === "string" ? data.aboutCredits : "",
       aboutTextEnglish: typeof data?.aboutTextEnglish === "string" && data.aboutTextEnglish.trim() ? data.aboutTextEnglish : aboutDefaults.aboutTextEnglish,
       aboutTextFilipino: typeof data?.aboutTextFilipino === "string" && data.aboutTextFilipino.trim() ? data.aboutTextFilipino : aboutDefaults.aboutTextFilipino,
+      canManageTesterAccess: true,
       showCheatButton: Boolean(data?.showCheatButton ?? false),
       apkDownloadUrl: typeof data?.apkDownloadUrl === "string" ? data.apkDownloadUrl : "",
       apkDownloadEnabled: Boolean(data?.apkDownloadEnabled ?? false),
@@ -26,10 +27,11 @@ export async function GET() {
         const value = data?.[`mobCountArc${Math.floor(index / 2) + 1}Level${index % 2 + 1}`];
         return typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 100 ? value : null;
       }),
-      mobChaseDistances: Array.from({ length: 10 }, (_, index) => {
+      canManageChaseDistance: user.role === "superadmin",
+      ...(user.role === "superadmin" ? { mobChaseDistances: Array.from({ length: 10 }, (_, index) => {
         const value = data?.[`mobChaseDistanceArc${index + 1}`];
         return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100 ? value : null;
-      }),
+      }) } : {}),
       mobTypeNames: MOB_TYPES.map(({ key, name }) => {
         const value = data?.[`mobNameType${key}`];
         return typeof value === "string" && value.trim() ? value : name;
@@ -61,6 +63,9 @@ export async function POST(request: Request) {
     const body = await request.json();
     if (!body || typeof body !== "object" || Array.isArray(body))
       return NextResponse.json({ error: "Configuration must be an object." }, { status: 400 });
+    if (user.role !== "superadmin" && Object.keys(body).some(key => key === "mobChaseDistances" || key.startsWith("mobChaseDistanceArc"))) {
+      return NextResponse.json({ error: "Superadmin role required to change chase distance." }, { status: 403 });
+    }
     const update: {
       aboutCredits?: string;
       aboutTextEnglish?: string;

@@ -30,6 +30,25 @@ function harness(role = 'admin', data = {}) {
   return { api, writes, post: body => api.POST({ json: async () => body }) };
 }
 const names = () => Array.from({ length: 10 }, (_, i) => `Mob ${i + 1}`);
+
+test('admins and superadmins can read and toggle tester access', async () => {
+  for (const [role, status] of [[null, 401], ['user', 403], ['tester', 403]]) {
+    const h = harness(role);
+    assert.equal((await h.api.GET()).status, status);
+    assert.equal((await h.post({ showCheatButton: true, apkDownloadEnabled: true })).status, status);
+    assert.equal(h.writes.length, 0);
+  }
+  for (const role of ['admin', 'superadmin']) {
+    const h = harness(role, { showCheatButton: true });
+    const allowed = await h.api.GET();
+    assert.equal(allowed.body.canManageTesterAccess, true);
+    assert.equal(allowed.body.showCheatButton, true);
+    for (const enabled of [false, true]) {
+      assert.equal((await h.post({ showCheatButton: enabled })).status, 200);
+      assert.equal(h.writes.at(-1).update.showCheatButton, enabled);
+    }
+  }
+});
 test('read and write require admin permissions', async () => {
   for (const [role, status] of [[null, 401], ['user', 403], ['tester', 403]]) {
     const h = harness(role); assert.equal((await h.api.GET()).status, status);
@@ -55,14 +74,14 @@ test('rejects malformed, blank, long, markup and control-character names before 
     const list = names(); list[9] = name; invalid.push(list);
   }
   for (const mobNames of invalid) {
-    const h = harness(); assert.equal((await h.post({ mobNames, showCheatButton: true })).status, 400);
+    const h = harness(); assert.equal((await h.post({ mobNames, apkDownloadEnabled: true })).status, 400);
     assert.equal(h.writes.length, 0);
   }
 });
 test('allows Unicode and preserves unrelated-field updates', async () => {
   const h = harness(); const list = names(); list[0] = 'Mandirigmang Pilipino'; list[1] = 'Niño';
   assert.equal((await h.post({ mobNames: list })).status, 200);
-  const other = harness(); assert.equal((await other.post({ showCheatButton: false })).status, 200);
+  const other = harness('superadmin'); assert.equal((await other.post({ showCheatButton: false })).status, 200);
   assert.deepEqual(other.writes[0].update, { showCheatButton: false });
 });
 test('rejects non-object payloads', async () => {
@@ -70,7 +89,7 @@ test('rejects non-object payloads', async () => {
 });
 
 test('chase distance GET preserves defaults and accepts numeric overrides including zero', async () => {
-  const h = harness('admin', { mobChaseDistanceArc1: 12.5, mobChaseDistanceArc2: 0, mobChaseDistanceArc3: '20', mobChaseDistanceArc4: 101 });
+  const h = harness('superadmin', { mobChaseDistanceArc1: 12.5, mobChaseDistanceArc2: 0, mobChaseDistanceArc3: '20', mobChaseDistanceArc4: 101 });
   const values = (await h.api.GET()).body.mobChaseDistances;
   assert.equal(values.length, 10);
   assert.equal(values[0], 12.5); assert.equal(values[1], 0);
@@ -90,17 +109,32 @@ test('chase distances reject malformed arrays and non-finite or out-of-range num
     const list = Array(10).fill(5); list[9] = value; bad.push(list);
   }
   for (const mobChaseDistances of bad) {
-    const h = harness();
+    const h = harness('superadmin');
     assert.equal((await h.post({ mobNames: names(), mobChaseDistances })).status, 400);
     assert.equal(h.writes.length, 0);
   }
 });
-test('chase changes require administrator permission', async () => {
-  for (const [role,status] of [[null,401],['user',403],['tester',403]]) {
+test('chase changes require superadmin permission', async () => {
+  for (const [role,status] of [[null,401],['user',403],['tester',403],['admin',403]]) {
     const h = harness(role);
     assert.equal((await h.post({mobChaseDistances:Array(10).fill(5)})).status,status);
     assert.equal(h.writes.length,0);
   }
+});
+
+test('admins cannot read chase settings or bypass restrictions with raw field names', async () => {
+  const h = harness('admin', { mobChaseDistanceArc1: 25 });
+  const response = await h.api.GET();
+  assert.equal(response.status, 200);
+  assert.equal(response.body.canManageChaseDistance, false);
+  assert.equal('mobChaseDistances' in response.body, false);
+  assert.equal('mobChaseDistanceArc1' in response.body, false);
+  for (const payload of [
+    { mobChaseDistanceArc1: 10, showCheatButton: true },
+    { mobChaseDistances: Array(10).fill(5), showCheatButton: true },
+  ]) assert.equal((await h.post(payload)).status, 403);
+  assert.equal(h.writes.length, 0);
+  assert.equal((await harness('superadmin').api.GET()).body.canManageChaseDistance, true);
 });
 
 test('type names default independently of legacy arc names and preserve other settings', async () => {
@@ -118,7 +152,7 @@ test('saves type names using stable model keys only', async () => {
 test('invalid type names reject the whole save, including unrelated settings', async () => {
   for (const mobTypeNames of [null, [], names(), ['Wolf', 'Goblin', 'Hammer Goblin', '<b>Troll</b>'], ['Wolf', 'Goblin', 'Hammer Goblin', ''], ['Wolf', 'Goblin', 'Hammer Goblin', 3], ['Wolf', 'Goblin', 'Hammer Goblin', 'x'.repeat(41)]]) {
     const h = harness();
-    assert.equal((await h.post({mobTypeNames, showCheatButton: true})).status, 400);
+    assert.equal((await h.post({mobTypeNames, apkDownloadEnabled: true})).status, 400);
     assert.equal(h.writes.length, 0);
   }
 });
@@ -152,7 +186,7 @@ test('mob count writes cover regular levels only and preserve bosses with merge'
 test('bad counts reject the entire update before writing', async () => {
   for (const invalid of [-1, 101, 2.5, '6', true, {}, []]) {
     const values = Array(20).fill(null); values[19] = invalid;
-    const h = harness(); assert.equal((await h.post({ mobCounts: values, showCheatButton: true })).status, 400);
+    const h = harness(); assert.equal((await h.post({ mobCounts: values, apkDownloadEnabled: true })).status, 400);
     assert.equal(h.writes.length, 0);
   }
   for (const mobCounts of [null, [], Array(19).fill(1), Array(30).fill(1)])

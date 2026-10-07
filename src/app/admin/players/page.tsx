@@ -1,14 +1,30 @@
 import PlayersTable, { type PlayerRow } from "@/components/PlayersTable";
-import { getAdminDb } from "@/lib/firebaseAdmin";
+import { getAdminAuth, getAdminDb } from "@/lib/firebaseAdmin";
+import { getSessionUser, isAdminRole, normalizeRole } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { isSamplePlayer } from "@/lib/rankedPlayers";
 
 export const dynamic = "force-dynamic";
 
-async function fetchPlayers(): Promise<{ players: PlayerRow[]; error: string | null }> {
+async function fetchPlayers(includeSuperadmins: boolean): Promise<{ players: PlayerRow[]; error: string | null }> {
   try {
     const db = getAdminDb();
     const snapshot = await db.collection("players").orderBy("points", "desc").get();
+    let visibleDocs = snapshot.docs;
+    if (!includeSuperadmins) {
+      // Check authoritative Auth claims before passing any roster data to the client.
+      const visibleUids = new Set<string>();
+      const auth = getAdminAuth();
+      for (let offset = 0; offset < snapshot.docs.length; offset += 100) {
+        const result = await auth.getUsers(snapshot.docs.slice(offset, offset + 100).map(doc => ({ uid: doc.id })));
+        for (const user of result.users) {
+          if (normalizeRole(user.customClaims?.role) !== "superadmin") visibleUids.add(user.uid);
+        }
+      }
+      visibleDocs = snapshot.docs.filter(doc => visibleUids.has(doc.id));
+    }
     return {
-      players: snapshot.docs.map((doc) => {
+      players: visibleDocs.filter(doc => !isSamplePlayer(doc.id)).map((doc) => {
         const data = doc.data();
         return {
           uid: doc.id,
@@ -25,7 +41,10 @@ async function fetchPlayers(): Promise<{ players: PlayerRow[]; error: string | n
 }
 
 export default async function PlayersPage() {
-  const { players, error } = await fetchPlayers();
+  const user = await getSessionUser();
+  if (!user) redirect("/login");
+  if (!isAdminRole(user.role)) redirect("/account");
+  const { players, error } = await fetchPlayers(user.role === "superadmin");
   const totalPoints = players.reduce((sum, player) => sum + player.points, 0);
   const topScore = players[0]?.points ?? 0;
 

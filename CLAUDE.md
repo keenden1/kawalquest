@@ -1,5 +1,10 @@
 # CLAUDE.md
 
+## APK download filename - 2026-10-05
+
+- New APK uploads use apk/<random UUID>/kawal-Quest.apk, retaining a unique URL per build while using the requested download basename. The public Download APK anchor also suggests kawal-Quest.apk via its download attribute; cross-origin browsers may rely on the stored URL filename instead.
+- Deploy the admin website and upload the matching existing APK once to update the public link. Existing R2 objects and external links (such as Google Drive) are not renamed by this code change. No Unity rebuild or extra CORS headers are required.
+
 ## Saved uploads and release management - 2026-10-05
 
 - Resource Packs now has an Uploaded releases section with per-pack storage status, Refresh uploads, Publish release and Replace files for unpublished releases. Drafts persist in chapterReleaseDrafts, registered before signing upload URLs; selecting release.json also registers/checks existing uploads. Only chapterReleases is public to the game, and publication still verifies sizes/hash metadata.

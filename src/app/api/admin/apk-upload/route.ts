@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getR2Bucket, getR2Client, getR2PublicUrl } from "@/lib/r2";
@@ -25,13 +26,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "File size must be between 0 and 2GB." }, { status: 400 });
     }
 
-    const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const key = `apk/${Date.now()}-${safeName}`;
+    // Keep builds separate while giving direct downloads a consistent filename.
+    const key = `apk/${randomUUID()}/Kawal-Quest.apk`;
 
     const command = new PutObjectCommand({
       Bucket: getR2Bucket(),
       Key: key,
       ContentType: contentType,
+      ContentDisposition: 'attachment; filename="Kawal-Quest.apk"',
     });
     const uploadUrl = await getSignedUrl(getR2Client(), command, { expiresIn: 3600 });
 

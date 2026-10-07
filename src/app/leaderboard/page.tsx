@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import PublicHeader from "@/components/PublicHeader";
-import { getAdminDb } from "@/lib/firebaseAdmin";
+import { getRankedPlayers } from "@/lib/rankedPlayers";
 
 export const metadata: Metadata = { title: "Leaderboard" };
 export const dynamic = "force-dynamic";
 
 async function getPlayers() {
   try {
-    const snapshot = await getAdminDb().collection("players").orderBy("points", "desc").limit(25).get();
-    return snapshot.docs.map((doc) => { const data = doc.data(); return { id: doc.id, username: typeof data.username === "string" ? data.username : "Unknown Kawal", points: typeof data.points === "number" ? data.points : 0 }; });
+    return await getRankedPlayers(25);
   } catch { return []; }
 }
 

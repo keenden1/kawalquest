@@ -53,6 +53,38 @@ const event = {preventDefault() {}};
 
 const sectionButton = (tree, label) => find(tree, n => n.type === 'button' && Array.isArray(n.props.children) && n.props.children[0] === label);
 const inputs = tree => nodes(tree).filter(n => n.type === 'input' && n.props.type === 'text');
+
+test('restricted controls stay hidden while permissions are loading', () => {
+  const tree = harness([]).render();
+  assert.equal(sectionButton(tree, 'Chase distance'), undefined);
+  assert.equal(sectionButton(tree, 'Tester access'), undefined);
+});
+
+test('tester access is visible only when the server grants permission', async () => {
+  for (const permission of [undefined, false, true]) {
+    const h = harness([[200, {canManageTesterAccess: permission}]]);
+    let tree = await h.start();
+    const button = sectionButton(tree, 'Tester access');
+    assert.equal(Boolean(button), permission === true);
+    if (button) {
+      button.props.onClick(); tree = h.render();
+      assert.ok(find(tree, n => n.type === 'button' && n.props['aria-label'] === 'Enable the in-game Cheat button for tester accounts'));
+    }
+  }
+});
+
+test('only superadmins see and can open the chase section after loading', async () => {
+  for (const permission of [undefined, false, true]) {
+    const h = harness([[200, {canManageChaseDistance: permission}]]);
+    let tree = await h.start();
+    const button = sectionButton(tree, 'Chase distance');
+    assert.equal(Boolean(button), permission === true);
+    if (button) {
+      button.props.onClick(); tree = h.render();
+      assert.ok(find(tree, n => n.type === 'input' && n.props.placeholder === 'Use game setting'));
+    }
+  }
+});
 test('section switches preserve drafts and saving mobs excludes character changes', async () => {
   const h = harness([[200, {}], [200, {mobTypeNames:['Forest Wolf','Goblin','Hammer Goblin','Giant Troll']}]]);
   let tree = await h.start();

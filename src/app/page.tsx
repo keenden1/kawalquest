@@ -4,6 +4,7 @@ import Link from "next/link";
 import MobileNav from "@/components/MobileNav";
 import { getAdminDb } from "@/lib/firebaseAdmin";
 import { getSessionUser } from "@/lib/auth";
+import { getRankedPlayers } from "@/lib/rankedPlayers";
 
 export const dynamic = "force-dynamic";
 
@@ -22,14 +23,7 @@ type RankedPlayer = { username: string; points: number };
 
 async function getTopPlayers(): Promise<RankedPlayer[]> {
   try {
-    const snapshot = await getAdminDb().collection("players").orderBy("points", "desc").limit(5).get();
-    return snapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        username: typeof data.username === "string" ? data.username : "Unknown Kawal",
-        points: typeof data.points === "number" ? data.points : 0,
-      };
-    });
+    return await getRankedPlayers(5);
   } catch {
     return [];
   }
@@ -115,7 +109,7 @@ export default async function PublicLandingPage() {
         </section>
 
         <section id="play" className="px-5 pb-24 sm:px-8 lg:pb-32">
-          <div className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl border border-amber-300/15 bg-gradient-to-br from-[#173525] to-[#09130e] px-6 py-16 text-center sm:px-10 lg:py-20"><div className="absolute left-1/2 top-0 size-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-300/10 blur-3xl" /><div className="relative"><p className="eyebrow">The quest is forming</p><h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white sm:text-5xl">Ready when the realm calls?</h2><p className="mx-auto mt-4 max-w-xl leading-7 text-stone-400">Kawal Quest is currently in development. Follow the journey and be among the first guardians to enter.</p>{!apkDownload.enabled ? <span className="mt-8 inline-flex items-center gap-2 rounded-xl border border-amber-300/20 bg-amber-300/8 px-6 py-3.5 text-sm font-bold text-amber-200" aria-disabled="true">⚠ Under maintenance</span> : apkDownload.url ? <a href={apkDownload.url} download className="mt-8 inline-flex items-center gap-2 rounded-xl bg-amber-300 px-6 py-3.5 text-sm font-black text-[#172018] shadow-xl shadow-black/30 hover:bg-amber-200">⬇ Download APK</a> : <span className="mt-8 inline-flex cursor-not-allowed rounded-xl bg-stone-100/10 px-6 py-3.5 text-sm font-bold text-stone-400" aria-disabled="true">Download coming soon</span>}</div></div>
+          <div className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl border border-amber-300/15 bg-gradient-to-br from-[#173525] to-[#09130e] px-6 py-16 text-center sm:px-10 lg:py-20"><div className="absolute left-1/2 top-0 size-80 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-300/10 blur-3xl" /><div className="relative"><p className="eyebrow">The quest is forming</p><h2 className="mt-4 text-4xl font-black tracking-[-0.04em] text-white sm:text-5xl">Ready when the realm calls?</h2><p className="mx-auto mt-4 max-w-xl leading-7 text-stone-400">Kawal Quest is currently in development. Follow the journey and be among the first guardians to enter.</p>{!apkDownload.enabled ? <span className="mt-8 inline-flex items-center gap-2 rounded-xl border border-amber-300/20 bg-amber-300/8 px-6 py-3.5 text-sm font-bold text-amber-200" aria-disabled="true">⚠ Under maintenance</span> : apkDownload.url ? <a href={apkDownload.url} download="kawal-Quest.apk" className="mt-8 inline-flex items-center gap-2 rounded-xl bg-amber-300 px-6 py-3.5 text-sm font-black text-[#172018] shadow-xl shadow-black/30 hover:bg-amber-200">⬇ Download APK</a> : <span className="mt-8 inline-flex cursor-not-allowed rounded-xl bg-stone-100/10 px-6 py-3.5 text-sm font-bold text-stone-400" aria-disabled="true">Download coming soon</span>}</div></div>
         </section>
       </main>
 

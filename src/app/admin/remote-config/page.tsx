@@ -28,6 +28,8 @@ export default function RemoteConfigPage() {
   const [section, setSection] = useState<Section>("about");
   const [selectedArc, setSelectedArc] = useState(0);
   const [loadState, setLoadState] = useState<LoadState>("loading");
+  const [canManageChaseDistance, setCanManageChaseDistance] = useState(false);
+  const [canManageTesterAccess, setCanManageTesterAccess] = useState(false);
   const [showCheatButton, setShowCheatButton] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,9 +51,6 @@ export default function RemoteConfigPage() {
   const [namesSaved, setNamesSaved] = useState(false);
 
   const [apkDownloadUrl, setApkDownloadUrl] = useState("");
-  const [apkUrlInput, setApkUrlInput] = useState("");
-  const [savingApkUrl, setSavingApkUrl] = useState(false);
-  const [apkUrlError, setApkUrlError] = useState<string | null>(null);
   const [apkUrlSaved, setApkUrlSaved] = useState(false);
 
   const [apkDownloadEnabled, setApkDownloadEnabled] = useState(false);
@@ -66,9 +65,10 @@ export default function RemoteConfigPage() {
   useEffect(() => {
     fetch("/api/remote-config").then((res) => res.json()).then((data) => {
       if (data.error) throw new Error(data.error);
+      setCanManageChaseDistance(data.canManageChaseDistance === true);
+      setCanManageTesterAccess(data.canManageTesterAccess === true);
       setShowCheatButton(Boolean(data.showCheatButton));
       setApkDownloadUrl(typeof data.apkDownloadUrl === "string" ? data.apkDownloadUrl : "");
-      setApkUrlInput(typeof data.apkDownloadUrl === "string" ? data.apkDownloadUrl : "");
       setApkDownloadEnabled(Boolean(data.apkDownloadEnabled));
       const loadedBossNames = Array.isArray(data.bossNames) && data.bossNames.length === 10
         ? data.bossNames.map((value: unknown) => typeof value === "string" ? value : "")
@@ -188,25 +188,6 @@ export default function RemoteConfigPage() {
     }
   }
 
-  async function handleSaveApkUrl(e: FormEvent) {
-    e.preventDefault();
-    setSavingApkUrl(true);
-    setApkUrlError(null);
-    setApkUrlSaved(false);
-    try {
-      const res = await fetch("/api/remote-config", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ apkDownloadUrl: apkUrlInput.trim() }) });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setApkDownloadUrl(data.apkDownloadUrl ?? "");
-      setApkUrlInput(data.apkDownloadUrl ?? "");
-      setApkUrlSaved(true);
-    } catch (err) {
-      setApkUrlError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setSavingApkUrl(false);
-    }
-  }
-
   async function handleFileSelected(file: File) {
     setUploading(true);
     setUploadError(null);
@@ -241,7 +222,6 @@ export default function RemoteConfigPage() {
       const saveData = await saveRes.json();
       if (saveData.error) throw new Error(saveData.error);
       setApkDownloadUrl(saveData.apkDownloadUrl ?? "");
-      setApkUrlInput(saveData.apkDownloadUrl ?? "");
       setApkUrlSaved(true);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : String(err));
@@ -256,14 +236,14 @@ export default function RemoteConfigPage() {
     mobs: mobNameInputs.some((value, index) => value.trim() !== mobNames[index]),
     bosses: bossNameInputs.some((value, index) => value.trim() !== bossNames[index]),
     chase: chaseInputs.some((value, index) => (value.trim() === "" ? "" : String(Number(value))) !== chaseDistances[index]),
-    about: false, questions: false, testing: false, downloads: apkUrlInput.trim() !== apkDownloadUrl,
+    about: false, questions: false, testing: false, downloads: false,
   };
 
   return (
     <div className="space-y-7">
       <header><p className="eyebrow">Live Operations</p><h1 className="page-title mt-2">Game controls</h1><p className="mt-2 text-sm text-stone-400">Choose a section to edit. Saved changes reach connected games.</p></header>
       <nav aria-label="Game control sections" className="sticky top-16 z-30 flex flex-wrap gap-2 rounded-2xl border border-white/10 bg-[#0b1b14] p-3 shadow-lg">
-        {sections.map(({ id, label }) => (
+        {sections.filter(({ id }) => (id !== "chase" || canManageChaseDistance) && (id !== "testing" || canManageTesterAccess)).map(({ id, label }) => (
           <button key={id} type="button" aria-pressed={section === id} disabled={savingNames}
             onClick={() => { setSection(id); setNamesSaved(false); setNamesError(null); }}
             className={`rounded-xl px-4 py-2.5 text-sm font-bold transition-colors disabled:opacity-50 ${section === id ? "bg-amber-300 text-[#172018]" : "text-stone-300 hover:bg-white/10"}`}>
@@ -275,13 +255,13 @@ export default function RemoteConfigPage() {
       <div hidden={section !== "questions"}><NPCQuestionsEditor /></div>
       {loadState === "loading" && <div className="game-panel flex items-center gap-3 rounded-2xl p-5 text-sm text-stone-400" role="status"><span className="size-4 animate-spin rounded-full border-2 border-emerald-300/25 border-t-emerald-300" />Loading current flag state...</div>}
       {error && <div className="rounded-2xl border border-red-400/20 bg-red-400/8 p-5 text-sm text-red-200" role="alert">{error}</div>}
-      {loadState !== "loading" && section === "testing" && (
+      {loadState !== "loading" && canManageTesterAccess && section === "testing" && (
         <div className="game-panel flex flex-col gap-6 rounded-2xl p-6 sm:flex-row sm:items-center sm:justify-between">
           <div><div className="mb-3 flex items-center gap-2"><span className={`size-2 rounded-full ${showCheatButton ? "bg-emerald-400 shadow-[0_0_10px_#34d399]" : "bg-stone-600"}`} /><span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Tester access {showCheatButton ? "enabled" : "disabled"}</span></div><h2 className="text-lg font-bold text-white">Tester Cheat button</h2><p className="mt-2 max-w-xl text-sm leading-6 text-stone-400">Turns the in-game Cheat button on or off for tester accounts. Regular player accounts never see it.</p></div>
           <button onClick={handleToggle} disabled={saving} className={`relative h-10 w-[4.5rem] shrink-0 rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${showCheatButton ? "border-emerald-300/30 bg-emerald-400" : "border-white/10 bg-stone-700"}`} aria-pressed={showCheatButton} aria-label="Enable the in-game Cheat button for tester accounts"><span className={`absolute left-1 top-1 h-8 w-8 rounded-full bg-white shadow-md transition-transform ${showCheatButton ? "translate-x-8" : "translate-x-0"}`} /></button>
         </div>
       )}
-      {loadState !== "loading" && ["characters", "mobs", "bosses", "chase", "counts"].includes(section) && (
+      {loadState !== "loading" && (section !== "chase" || canManageChaseDistance) && ["characters", "mobs", "bosses", "chase", "counts"].includes(section) && (
         <section className="game-panel rounded-2xl p-6" aria-labelledby="content-names-heading">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -300,13 +280,13 @@ export default function RemoteConfigPage() {
             </label>}
             {section === "characters" && <div className="grid gap-4 md:grid-cols-2">
               <label className="block text-sm font-bold text-stone-200">
-                David&apos;s name
-                <span className="mt-1 block text-xs font-normal leading-5 text-stone-500">Shown on David&apos;s character-selection option and biography.</span>
+                Male character name
+                <span className="mt-1 block text-xs font-normal leading-5 text-stone-500">Shown for the male character in character selection and biography.</span>
                 <input type="text" value={boyCharacterNameInput} required minLength={2} maxLength={40} onChange={(e) => { setBoyCharacterNameInput(e.target.value); setNamesSaved(false); }} className="mt-3 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-amber-300/50 focus:outline-none" />
               </label>
               <label className="block text-sm font-bold text-stone-200">
-                Clarisa&apos;s name
-                <span className="mt-1 block text-xs font-normal leading-5 text-stone-500">Shown on Clarisa&apos;s character-selection option and biography.</span>
+                Female character name
+                <span className="mt-1 block text-xs font-normal leading-5 text-stone-500">Shown for the female character in character selection and biography.</span>
                 <input type="text" value={girlCharacterNameInput} required minLength={2} maxLength={40} onChange={(e) => { setGirlCharacterNameInput(e.target.value); setNamesSaved(false); }} className="mt-3 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base text-white focus:border-amber-300/50 focus:outline-none" />
               </label>
             </div>}
@@ -389,7 +369,7 @@ export default function RemoteConfigPage() {
         <div className="game-panel rounded-2xl p-6">
           <div className="mb-3 flex items-center gap-2">
             <span className={`size-2 rounded-full ${apkDownloadEnabled ? (apkDownloadUrl ? "bg-emerald-400 shadow-[0_0_10px_#34d399]" : "bg-amber-400 shadow-[0_0_10px_#fbbf24]") : "bg-stone-600"}`} />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">{apkDownloadEnabled ? (apkDownloadUrl ? "Live" : "Enabled, no link set") : "Maintenance"}</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500">{apkDownloadEnabled ? (apkDownloadUrl ? "Live" : "Enabled, no APK uploaded") : "Maintenance"}</span>
           </div>
 
           <div className="flex flex-col gap-6 border-b border-white/7 pb-6 sm:flex-row sm:items-center sm:justify-between">
@@ -399,7 +379,7 @@ export default function RemoteConfigPage() {
           {apkEnabledError && <p className="mt-3 text-sm text-red-300" role="alert">{apkEnabledError}</p>}
 
           <h2 className="mt-6 text-lg font-bold text-white">Upload APK</h2>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-stone-400">Upload a build directly to storage. This replaces the link below once the upload finishes.</p>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-stone-400">Upload a build to replace the current APK once the upload finishes.</p>
           <div className="mt-4 flex flex-col gap-3">
             <label className={`inline-flex w-fit items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/10 ${uploading ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
               {uploading ? "Uploading..." : "Choose .apk file"}
@@ -424,26 +404,11 @@ export default function RemoteConfigPage() {
             {uploadError && <p className="text-sm text-red-300" role="alert">{uploadError}</p>}
           </div>
 
-          <h2 className="mt-8 text-lg font-bold text-white">APK download link</h2>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-stone-400">The URL the public site&apos;s &quot;Download APK&quot; button links to when downloads are on. Leave empty to show &quot;Download coming soon&quot; instead.</p>
-          <form onSubmit={handleSaveApkUrl} className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <input
-              type="url"
-              value={apkUrlInput}
-              onChange={(e) => { setApkUrlInput(e.target.value); setApkUrlSaved(false); }}
-              placeholder="https://example.com/kawal-quest.apk"
-              className="w-full min-w-0 flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-stone-600 focus:border-emerald-300/40 focus:outline-none"
-            />
-            <button
-              type="submit"
-              disabled={savingApkUrl || apkUrlInput.trim() === apkDownloadUrl}
-              className="shrink-0 rounded-xl bg-amber-300 px-5 py-2.5 text-sm font-extrabold text-[#172018] shadow-lg shadow-amber-950/20 hover:bg-amber-200 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {savingApkUrl ? "Saving..." : "Save link"}
-            </button>
-          </form>
-          {apkUrlError && <p className="mt-3 text-sm text-red-300" role="alert">{apkUrlError}</p>}
-          {apkUrlSaved && !apkUrlError && <p className="mt-3 text-sm text-emerald-300">Saved.</p>}
+          <h2 className="mt-8 text-lg font-bold text-white">APK file name</h2>
+          <p className="mt-3 break-all rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white">
+            {apkDownloadUrl ? "Kawal-Quest.apk" : "No APK uploaded yet."}
+          </p>
+          {apkUrlSaved && <p className="mt-3 text-sm text-emerald-300" role="status">APK uploaded successfully.</p>}
         </div>
       )}
     </div>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createUserWithEmailAndPassword, inMemoryPersistence, setPersistence, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { getClientAuth, hasFirebaseClientConfig } from "@/lib/firebaseClient";
 import PasswordField from "@/components/PasswordField";
+import AuthSuccessModal from "@/components/AuthSuccessModal";
 
 type Mode = "login" | "register" | "reset";
 
@@ -49,6 +50,7 @@ export default function AuthForm() {
   const [mode, setMode] = useState<Mode>("login");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successDestination, setSuccessDestination] = useState<string | null>(null);
 
   const [resetEmail, setResetEmail] = useState("");
   const [resetSending, setResetSending] = useState(false);
@@ -98,8 +100,7 @@ export default function AuthForm() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "Unable to sign in.");
       await auth.signOut();
-      router.push(data.user.role === "admin" || data.user.role === "superadmin" ? "/admin" : "/account");
-      router.refresh();
+      setSuccessDestination(data.user.role === "admin" || data.user.role === "superadmin" ? "/admin" : "/account");
     } catch (err) {
       setError(friendlyAuthError(err));
     } finally {
@@ -136,6 +137,14 @@ export default function AuthForm() {
   }
 
   const configured = hasFirebaseClientConfig();
+
+  if (successDestination) {
+    return <AuthSuccessModal
+      title={mode === "register" ? "Account created!" : "Login successful!"}
+      message={mode === "register" ? "Your account is ready. Welcome to Kawal Quest!" : "Welcome back to Kawal Quest. You're signed in and ready to continue."}
+      onContinue={() => { router.replace(successDestination); router.refresh(); }}
+    />;
+  }
 
   if (mode === "reset") {
     return (
