@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { HeadObjectCommand, PutObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { getSessionUser } from "@/lib/auth";
+import { getSessionUser, isAdminRole } from "@/lib/auth";
 import { getAdminDb } from "@/lib/firebaseAdmin";
 import { getR2Bucket, getR2Client, R2ConfigurationError } from "@/lib/r2";
 import { packKey, validateRelease, type ChapterRelease, type PackUploadStatus } from "@/lib/resourcePacks";
@@ -24,7 +24,7 @@ async function packStatus(release: ChapterRelease): Promise<PackUploadStatus[]> 
 async function authorize() {
   const user = await getSessionUser();
   return !user ? NextResponse.json({ error: "Authentication required." }, { status: 401, headers })
-    : user.role !== "superadmin" ? NextResponse.json({ error: "Superadmin role required." }, { status: 403, headers }) : null;
+    : !isAdminRole(user.role) ? NextResponse.json({ error: "Admin role required." }, { status: 403, headers }) : null;
 }
 export async function GET() {
   const denied = await authorize(); if (denied) return denied;

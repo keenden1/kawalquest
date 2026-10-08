@@ -63,14 +63,24 @@ test('reject malformed ids, sizes, hashes, incomplete and misplaced scenes',()=>
     r=>r.packs[0].scenes[0]='Assets/../4-1.unity',r=>r.packs[0].scenes[1]=r.packs[0].scenes[0],r=>r.packs[1]=r.packs[0]];
   for(const mutate of mutations){const r=release();mutate(r);assert.throws(()=>lib.validateRelease(r));}
 });
-test('resource pack listing, inspection, upload and publishing require superadmin',async()=>{
-  for(const role of [null,'user','tester','admin']){
+test('resource pack listing, inspection, upload and publishing require admin access',async()=>{
+  for(const role of [null,'user','tester']){
     const h=harness(role);
     assert.equal((await h.admin.GET()).status,role?403:401);
     for(const action of ['inspect','upload','publish']) assert.equal((await h.post(action)).status,role?403:401);
     assert.equal(h.uploads.length,0); assert.equal(h.writes.length,0);
   }
   assert.equal((await harness().post('upload',release(),{Origin:'https://evil.test'})).status,403);
+});
+
+test('admins and superadmins can list, inspect, upload and publish resource packs',async()=>{
+  for(const role of ['admin','superadmin']) {
+    const h=harness(role);
+    assert.equal((await h.admin.GET()).status,200);
+    assert.equal((await h.post('inspect')).status,200);
+    assert.equal((await h.post('upload')).status,200);
+    assert.equal((await h.post('publish')).status,200);
+  }
 });
 test('uploads use immutable release keys and expected size/hash metadata',async()=>{
   const h=harness();assert.equal((await h.post('upload')).status,200);assert.equal(h.writes.length,0);

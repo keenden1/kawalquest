@@ -52,6 +52,11 @@ export default function RemoteConfigPage() {
 
   const [apkDownloadUrl, setApkDownloadUrl] = useState("");
   const [apkUrlSaved, setApkUrlSaved] = useState(false);
+  const [canManageApkLink, setCanManageApkLink] = useState(false);
+  const [apkLinkInput, setApkLinkInput] = useState("");
+  const [savingApkLink, setSavingApkLink] = useState(false);
+  const [apkLinkError, setApkLinkError] = useState<string | null>(null);
+  const [apkLinkSaved, setApkLinkSaved] = useState(false);
 
   const [apkDownloadEnabled, setApkDownloadEnabled] = useState(false);
   const [savingApkEnabled, setSavingApkEnabled] = useState(false);
@@ -67,6 +72,8 @@ export default function RemoteConfigPage() {
       if (data.error) throw new Error(data.error);
       setCanManageChaseDistance(data.canManageChaseDistance === true);
       setCanManageTesterAccess(data.canManageTesterAccess === true);
+      setCanManageApkLink(data.canManageApkLink === true);
+      setApkLinkInput(typeof data.apkDownloadUrl === "string" ? data.apkDownloadUrl : "");
       setShowCheatButton(Boolean(data.showCheatButton));
       setApkDownloadUrl(typeof data.apkDownloadUrl === "string" ? data.apkDownloadUrl : "");
       setApkDownloadEnabled(Boolean(data.apkDownloadEnabled));
@@ -188,12 +195,34 @@ export default function RemoteConfigPage() {
     }
   }
 
+  async function handleSaveApkLink(e: FormEvent) {
+    e.preventDefault();
+    if (!canManageApkLink || uploading) return;
+    setSavingApkLink(true);
+    setApkLinkError(null);
+    setApkLinkSaved(false);
+    setApkUrlSaved(false);
+    try {
+      const res = await fetch("/api/remote-config", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ apkDownloadUrl: apkLinkInput.trim() }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Unable to save APK download link.");
+      setApkDownloadUrl(data.apkDownloadUrl);
+      setApkLinkInput(data.apkDownloadUrl);
+      setApkLinkSaved(true);
+    } catch (err) {
+      setApkLinkError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSavingApkLink(false);
+    }
+  }
+
   async function handleFileSelected(file: File) {
     setUploading(true);
     setUploadError(null);
     setUploadProgress(0);
     setUploadFileName(file.name);
     setApkUrlSaved(false);
+    setApkLinkSaved(false);
     try {
       const presignRes = await fetch("/api/admin/apk-upload", {
         method: "POST",
@@ -201,12 +230,13 @@ export default function RemoteConfigPage() {
         body: JSON.stringify({ fileName: file.name, contentType: file.type, size: file.size }),
       });
       const presignData = await presignRes.json();
-      if (presignData.error) throw new Error(presignData.error);
+      if (!presignRes.ok || presignData.error) throw new Error(presignData.error ?? "Unable to prepare APK upload.");
 
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open("PUT", presignData.uploadUrl);
         xhr.setRequestHeader("Content-Type", presignData.contentType);
+        xhr.setRequestHeader("Content-Disposition", presignData.contentDisposition);
         xhr.upload.onprogress = (e) => {
           if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100));
         };
@@ -214,14 +244,15 @@ export default function RemoteConfigPage() {
           if (xhr.status >= 200 && xhr.status < 300) resolve();
           else reject(new Error(`Upload to storage failed (status ${xhr.status}).`));
         };
-        xhr.onerror = () => reject(new Error("Network error during upload."));
+        xhr.onerror = () => reject(new Error("Unable to reach upload storage. Check your connection and the R2 bucket CORS policy for this website, PUT, Content-Type, and Content-Disposition."));
         xhr.send(file);
       });
 
-      const saveRes = await fetch("/api/remote-config", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ apkDownloadUrl: presignData.publicUrl }) });
+      const saveRes = await fetch("/api/admin/apk-upload", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "complete", key: presignData.key }) });
       const saveData = await saveRes.json();
-      if (saveData.error) throw new Error(saveData.error);
+      if (!saveRes.ok || saveData.error) throw new Error(saveData.error ?? "APK uploaded, but saving its download link failed. Please retry.");
       setApkDownloadUrl(saveData.apkDownloadUrl ?? "");
+      setApkLinkInput(saveData.apkDownloadUrl ?? "");
       setApkUrlSaved(true);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : String(err));
@@ -386,7 +417,7 @@ export default function RemoteConfigPage() {
               <input
                 type="file"
                 accept=".apk"
-                disabled={uploading}
+                disabled={uploading || savingApkLink}
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
@@ -409,6 +440,22 @@ export default function RemoteConfigPage() {
             {apkDownloadUrl ? "Kawal-Quest.apk" : "No APK uploaded yet."}
           </p>
           {apkUrlSaved && <p className="mt-3 text-sm text-emerald-300" role="status">APK uploaded successfully.</p>}
+          {canManageApkLink && (
+            <form onSubmit={handleSaveApkLink} className="mt-6 border-t border-white/7 pt-6">
+              <label htmlFor="apk-download-link" className="text-lg font-bold text-white">APK download link</label>
+              <p className="mt-2 text-sm leading-6 text-stone-400">Superadmins can paste a hosted APK link instead of uploading a file.</p>
+              <input id="apk-download-link" type="url" required value={apkLinkInput} disabled={uploading || savingApkLink}
+                onChange={(e) => { setApkLinkInput(e.target.value); setApkLinkSaved(false); setApkLinkError(null); }}
+                placeholder="https://example.com/Kawal-Quest.apk"
+                className="mt-3 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white disabled:opacity-50" />
+              <button type="submit" disabled={uploading || savingApkLink || !apkLinkInput.trim()}
+                className="mt-3 rounded-xl bg-yellow-400 px-5 py-2.5 text-sm font-bold text-black disabled:cursor-not-allowed disabled:opacity-50">
+                {savingApkLink ? "Saving..." : "Save APK link"}
+              </button>
+              {apkLinkError && <p className="mt-3 text-sm text-red-300" role="alert">{apkLinkError}</p>}
+              {apkLinkSaved && <p className="mt-3 text-sm text-emerald-300" role="status">APK download link saved.</p>}
+            </form>
+          )}
         </div>
       )}
     </div>

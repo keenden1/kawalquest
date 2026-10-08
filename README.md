@@ -12,6 +12,17 @@ backend. Separate Next.js project — not part of the Unity repo.
    `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY` from that JSON file.
 4. `npm run dev` and open [http://localhost:3000](http://localhost:3000)
 
+## APK upload storage
+
+Browser uploads use signed R2 PUT URLs. The bucket's CORS policy must allow the
+website origin, the `PUT` method, and both `Content-Type` and `Content-Disposition`
+headers. Preserve existing rules and headers (including `Cache-Control` and
+`x-amz-meta-sha256` for other upload flows). Configure this under Cloudflare R2 >
+your bucket > Settings > CORS Policy.
+
+The APK upload API returns `contentType` and `contentDisposition`; the browser
+must send both values unchanged as headers so the request matches its signature.
+
 ## Authentication setup
 
 1. In Firebase Console, open **Authentication -> Sign-in method** and enable **Email/Password**.

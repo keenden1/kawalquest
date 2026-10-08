@@ -46,12 +46,13 @@ function loadPage(file, role, records = [], failLookup = false) {
   return { render: mod.exports.default, calls };
 }
 
-test('resource pack page redirects all non-superadmins before rendering editor', async () => {
-  for (const role of [null, 'user', 'tester', 'admin']) {
+test('resource pack page allows admins and superadmins only', async () => {
+  for (const role of [null, 'user', 'tester']) {
     await assert.rejects(loadPage('src/app/admin/resource-packs/page.tsx', role).render,
-      new RegExp('redirect:' + (role ? '/admin' : '/login')));
+      new RegExp('redirect:' + (role ? '/account' : '/login')));
   }
   assert.match(JSON.stringify(await loadPage('src/app/admin/resource-packs/page.tsx', 'superadmin').render()), /ResourcePacksEditor/);
+  assert.match(JSON.stringify(await loadPage('src/app/admin/resource-packs/page.tsx', 'admin').render()), /ResourcePacksEditor/);
 });
 
 test('admins can open Roles but receive no superadmin accounts', async () => {

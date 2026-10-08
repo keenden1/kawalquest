@@ -19,7 +19,7 @@ const links = [
 export default function Nav({ role, email }: { role: Role; email: string | null }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const visibleLinks = [...links.filter(link => role === "superadmin" || link.href !== "/admin/resource-packs"), { href: "/admin/users", label: "Roles", glyph: "♛" }];
+  const visibleLinks = [...links, { href: "/admin/users", label: "Roles", glyph: "♛" }];
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/8 bg-[#07110d]/88 backdrop-blur-xl">

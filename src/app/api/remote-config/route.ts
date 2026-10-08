@@ -20,6 +20,7 @@ export async function GET() {
       aboutTextEnglish: typeof data?.aboutTextEnglish === "string" && data.aboutTextEnglish.trim() ? data.aboutTextEnglish : aboutDefaults.aboutTextEnglish,
       aboutTextFilipino: typeof data?.aboutTextFilipino === "string" && data.aboutTextFilipino.trim() ? data.aboutTextFilipino : aboutDefaults.aboutTextFilipino,
       canManageTesterAccess: true,
+      canManageApkLink: user.role === "superadmin",
       showCheatButton: Boolean(data?.showCheatButton ?? false),
       apkDownloadUrl: typeof data?.apkDownloadUrl === "string" ? data.apkDownloadUrl : "",
       apkDownloadEnabled: Boolean(data?.apkDownloadEnabled ?? false),
@@ -103,6 +104,9 @@ export async function POST(request: Request) {
     }
 
     if ("apkDownloadUrl" in body) {
+      if (user.role !== "superadmin") {
+        return NextResponse.json({ error: "Superadmin role required to change the APK link. Use Upload APK instead." }, { status: 403 });
+      }
       if (typeof body.apkDownloadUrl !== "string") {
         return NextResponse.json(
           { error: "apkDownloadUrl must be a string" },
@@ -110,9 +114,14 @@ export async function POST(request: Request) {
         );
       }
       const trimmed = body.apkDownloadUrl.trim();
-      if (trimmed && !/^https?:\/\//i.test(trimmed)) {
+      let validUrl = false;
+      try {
+        const url = new URL(trimmed);
+        validUrl = ["http:", "https:"].includes(url.protocol) && !url.username && !url.password;
+      } catch { /* Invalid URLs are rejected below. */ }
+      if (!validUrl) {
         return NextResponse.json(
-          { error: "apkDownloadUrl must start with http:// or https://" },
+          { error: "Enter a valid http:// or https:// APK download link without credentials." },
           { status: 400 }
         );
       }
