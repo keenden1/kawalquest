@@ -52,7 +52,7 @@ export default async function AdminShopPage() {
         <strong className="text-amber-200">Images are stored and cached automatically.</strong> Choose an image while adding or editing an item.
         The saved public URL remains available to the game and website.
       </div>
-      <ShopManager initialItems={items} />
+      <ShopManager initialItems={items} canCreateDelete={user.role === "superadmin"} />
     </div>
   );
 }

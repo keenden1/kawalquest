@@ -56,7 +56,7 @@ function toDraft(item: ShopItem): ShopItemInput {
   };
 }
 
-export default function ShopManager({ initialItems }: { initialItems: ShopItem[] }) {
+export default function ShopManager({ initialItems, canCreateDelete = false }: { initialItems: ShopItem[]; canCreateDelete?: boolean }) {
   const [items, setItems] = useState(initialItems);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -80,6 +80,7 @@ export default function ShopManager({ initialItems }: { initialItems: ShopItem[]
   }, [modalOpen]);
 
   function openCreate() {
+    if (!canCreateDelete) return;
     setEditingId(null);
     setDraft(EMPTY_DRAFT);
     setError(null);
@@ -153,6 +154,7 @@ export default function ShopManager({ initialItems }: { initialItems: ShopItem[]
   }
 
   async function submit() {
+    if (!editingId && !canCreateDelete) return;
     setSaving(true);
     setError(null);
     try {
@@ -175,6 +177,7 @@ export default function ShopManager({ initialItems }: { initialItems: ShopItem[]
   }
 
   async function remove(id: string) {
+    if (!canCreateDelete) return;
     if (!window.confirm("Delete this shop item? This cannot be undone.")) return;
     setDeletingId(id);
     setMessage(null);
@@ -212,9 +215,9 @@ export default function ShopManager({ initialItems }: { initialItems: ShopItem[]
           </div>
           <div className="flex items-center gap-3">
             <SearchInput value={search} onChange={changeSearch} placeholder="Search items..." />
-            <button type="button" onClick={openCreate} className="shrink-0 rounded-xl bg-amber-300 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-[#172018] hover:bg-amber-200">
+            {canCreateDelete && <button type="button" onClick={openCreate} className="shrink-0 rounded-xl bg-amber-300 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-[#172018] hover:bg-amber-200">
               + Add item
-            </button>
+            </button>}
           </div>
         </div>
         {message && <div className="border-b border-white/7 bg-emerald-400/7 px-5 py-3 text-xs text-emerald-200" role="status">{message}</div>}
@@ -242,11 +245,11 @@ export default function ShopManager({ initialItems }: { initialItems: ShopItem[]
                       <span className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold uppercase text-emerald-300">Active</span>
                     )}
                   </td>
-                  <td className="px-5 py-4 text-right"><div className="flex justify-end gap-2"><button type="button" onClick={() => openEdit(item)} className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-bold text-stone-300 hover:bg-white/8">Edit</button><button type="button" onClick={() => remove(item.id)} disabled={deletingId === item.id} className="rounded-lg border border-red-300/20 px-3 py-1.5 text-xs font-bold text-red-300 hover:bg-red-400/8 disabled:opacity-50">{deletingId === item.id ? "..." : "Delete"}</button></div></td>
+                  <td className="px-5 py-4 text-right"><div className="flex justify-end gap-2"><button type="button" onClick={() => openEdit(item)} className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-bold text-stone-300 hover:bg-white/8">Edit</button>{canCreateDelete && <button type="button" onClick={() => remove(item.id)} disabled={deletingId === item.id} className="rounded-lg border border-red-300/20 px-3 py-1.5 text-xs font-bold text-red-300 hover:bg-red-400/8 disabled:opacity-50">{deletingId === item.id ? "..." : "Delete"}</button>}</div></td>
                 </tr>
               ))}
               {filteredItems.length === 0 && (
-                <tr><td colSpan={6} className="px-5 py-10 text-center text-stone-500">{items.length === 0 ? <>No shop items yet — click &quot;+ Add item&quot; above.</> : <>No items match &quot;{search}&quot;.</>}</td></tr>
+                <tr><td colSpan={6} className="px-5 py-10 text-center text-stone-500">{items.length === 0 ? <>No shop items yet.{canCreateDelete && <> Click &quot;+ Add item&quot; above.</>}</> : <>No items match &quot;{search}&quot;.</>}</td></tr>
               )}
             </tbody>
           </table>

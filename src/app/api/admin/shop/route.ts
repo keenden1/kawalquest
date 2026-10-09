@@ -50,7 +50,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-  if (!isAdminRole(user.role)) return NextResponse.json({ error: "Admin role required." }, { status: 403 });
+  if (user.role !== "superadmin") return NextResponse.json({ error: "Superadmin role required to add shop items." }, { status: 403 });
 
   const body: unknown = await request.json().catch(() => null);
   const parsed = parseShopItemInput(body);
@@ -94,7 +94,7 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
-  if (!isAdminRole(user.role)) return NextResponse.json({ error: "Admin role required." }, { status: 403 });
+  if (user.role !== "superadmin") return NextResponse.json({ error: "Superadmin role required to delete shop items." }, { status: 403 });
 
   const body: unknown = await request.json().catch(() => null);
   const id = typeof body === "object" && body !== null && "id" in body ? String((body as { id?: unknown }).id ?? "") : "";
