@@ -54,6 +54,24 @@ const event = {preventDefault() {}};
 const sectionButton = (tree, label) => find(tree, n => n.type === 'button' && Array.isArray(n.props.children) && n.props.children[0] === label);
 const inputs = tree => nodes(tree).filter(n => n.type === 'input' && n.props.type === 'text');
 
+test('APK link editor requires server permission while upload remains available', async () => {
+  for (const permission of [undefined, false, true]) {
+    const h = harness([[200, {canManageApkLink: permission}], [200, {apkDownloadUrl:'https://files.test/game.apk'}]]);
+    let tree = await h.start();
+    sectionButton(tree, 'Downloads').props.onClick(); tree = h.render();
+    assert.ok(find(tree, n => n.type === 'input' && n.props.type === 'file'));
+    const link = find(tree, n => n.props?.id === 'apk-download-link');
+    assert.equal(Boolean(link), permission === true);
+    if (link) {
+      link.props.onChange({target:{value:'https://files.test/game.apk'}});
+      tree = h.render();
+      await form(tree).props.onSubmit(event);
+      assert.deepEqual(JSON.parse(h.requests[1].options.body), {apkDownloadUrl:'https://files.test/game.apk'});
+      assert.match(JSON.stringify(h.render()), /APK download link saved/);
+    }
+  }
+});
+
 test('restricted controls stay hidden while permissions are loading', () => {
   const tree = harness([]).render();
   assert.equal(sectionButton(tree, 'Chase distance'), undefined);

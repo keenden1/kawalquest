@@ -7,6 +7,41 @@ const ts = require('typescript');
 const { S3Client, PutObjectCommand, HeadObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
+test('upload completion verifies storage and allows admins without accepting arbitrary links', async () => {
+  for (const role of [null, 'user', 'admin', 'superadmin']) {
+    const writes = [], checks = [];
+    let bytes = 123;
+    const imports = {
+      'next/server': { NextResponse: { json: (body, options = {}) => ({body, status: options.status ?? 200}) } },
+      'node:crypto': { randomUUID: () => 'test-id' },
+      '@aws-sdk/client-s3': { PutObjectCommand, HeadObjectCommand },
+      '@aws-sdk/s3-request-presigner': { getSignedUrl },
+      '@/lib/r2': { getR2Bucket: () => 'bucket', getR2Client: () => ({send: async command => { checks.push(command.input); return {ContentLength:bytes}; }}), getR2PublicUrl: key => `https://cdn.test/${key}` },
+      '@/lib/firebaseAdmin': { getAdminDb: () => ({collection: () => ({doc: () => ({set: async data => writes.push(data)})})}) },
+      '@/lib/auth': { getSessionUser: async () => role ? {role} : null, isAdminRole: value => ['admin','superadmin'].includes(value) },
+    };
+    const module = {exports:{}};
+    const code = ts.transpileModule(fs.readFileSync('src/app/api/admin/apk-upload/route.ts','utf8'), {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
+    vm.runInNewContext(code,{module,exports:module.exports,require:name=>imports[name]});
+    const post = body => module.exports.POST({json:async()=>body});
+    const key = 'apk/12345678-1234-1234-1234-123456789012/Kawal-Quest.apk';
+    const result = await post({action:'complete',key,apkDownloadUrl:'https://untrusted.test/file.apk'});
+    if (['admin','superadmin'].includes(role)) {
+      assert.equal(result.status,200);
+      assert.equal(writes[0].apkDownloadUrl,`https://cdn.test/${key}`);
+      assert.equal(checks[0].Key,key);
+      assert.equal((await post({action:'complete',key:'https://untrusted.test/file.apk'})).status,400);
+      bytes = 0;
+      assert.equal((await post({action:'complete',key})).status,400);
+      assert.equal(writes.length,1);
+    } else {
+      assert.equal(result.status,role ? 403 : 401);
+      assert.equal(writes.length,0);
+      assert.equal(checks.length,0);
+    }
+  }
+});
+
 test('APK browser upload sends all signed headers and saves only after storage succeeds', async () => {
   const client = new S3Client({ region: 'auto', endpoint: 'https://example.r2.cloudflarestorage.com',
     credentials: { accessKeyId: 'test', secretAccessKey: 'test' } });

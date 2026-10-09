@@ -30,6 +30,7 @@ async function fetchPlayers(includeSuperadmins: boolean): Promise<{ players: Pla
           uid: doc.id,
           username: typeof data.username === "string" ? data.username : "(no username)",
           points: typeof data.points === "number" ? data.points : 0,
+          survivalBestKills: typeof data.survivalBestKills === "number" ? data.survivalBestKills : 0,
           createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : null,
         };
       }),

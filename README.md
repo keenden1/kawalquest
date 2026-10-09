@@ -23,6 +23,10 @@ your bucket > Settings > CORS Policy.
 The APK upload API returns `contentType` and `contentDisposition`; the browser
 must send both values unchanged as headers so the request matches its signature.
 
+In Downloads, superadmins can also save an existing hosted APK link. Regular
+admins use Upload APK; its completion endpoint verifies the R2 object before
+saving the download URL. Direct URL updates require the superadmin role.
+
 ## Authentication setup
 
 1. In Firebase Console, open **Authentication -> Sign-in method** and enable **Email/Password**.

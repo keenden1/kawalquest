@@ -9,12 +9,25 @@ function load(file, stubs = {}) {
   const source = fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
   const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText;
   const routeModule = { exports: {} };
-  vm.runInNewContext(compiled, { module: routeModule, exports: routeModule.exports, require: name => {
+  vm.runInNewContext(compiled, { URL, module: routeModule, exports: routeModule.exports, require: name => {
     assert.ok(name in stubs, 'Unexpected import: ' + name); return stubs[name];
   } });
   return routeModule.exports;
 }
 const defaults = load('src/lib/contentNames.ts');
+test('only superadmins may set an APK link directly', async () => {
+  const admin = harness('admin');
+  assert.equal((await admin.api.GET()).body.canManageApkLink, false);
+  assert.equal((await admin.post({apkDownloadUrl: 'https://files.test/game.apk'})).status, 403);
+  assert.equal(admin.writes.length, 0);
+  const superadmin = harness('superadmin');
+  assert.equal((await superadmin.api.GET()).body.canManageApkLink, true);
+  for (const apkDownloadUrl of ['', 'https://', 'javascript:alert(1)', 'https://user:pass@files.test/game.apk']) {
+    assert.equal((await superadmin.post({apkDownloadUrl})).status, 400);
+  }
+  assert.equal((await superadmin.post({apkDownloadUrl: ' https://files.test/game.apk '})).status, 200);
+  assert.equal(superadmin.writes[0].update.apkDownloadUrl, 'https://files.test/game.apk');
+});
 function harness(role = 'admin', data = {}) {
   const writes = [];
   const api = load('src/app/api/remote-config/route.ts', {

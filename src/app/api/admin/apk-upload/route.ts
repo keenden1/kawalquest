@@ -16,6 +16,9 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ error: "Upload request must be an object." }, { status: 400 });
+    }
     if (body.action === "complete") {
       // Admins can publish verified uploads, but cannot supply an arbitrary URL.
       if (typeof body.key !== "string" || !/^apk\/[0-9a-f-]{36}\/Kawal-Quest\.apk$/.test(body.key)) {

@@ -1,0 +1,13 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import PublicHeader from "@/components/PublicHeader";
+import { getRankedPlayers } from "@/lib/rankedPlayers";
+
+export const metadata: Metadata = { title: "Survival Leaderboard" };
+export const dynamic = "force-dynamic";
+
+export default async function SurvivalLeaderboardPage() {
+  let players: Awaited<ReturnType<typeof getRankedPlayers>> = [];
+  try { players = await getRankedPlayers(25, "survival"); } catch { players = []; }
+  return <main className="min-h-screen bg-[#050b08]"><PublicHeader active="/leaderboard" /><section className="mx-auto max-w-4xl px-5 py-20 sm:px-8 lg:py-28"><p className="eyebrow">Hall of Kawal</p><h1 className="mt-4 text-5xl font-black tracking-[-0.05em] text-white sm:text-7xl">Survival leaderboard.</h1><p className="mt-5 text-lg text-stone-400">The highest number of kills survived in one run.</p><div className="mt-8 flex gap-3"><Link href="/leaderboard" className="rounded-xl border border-white/10 px-4 py-2 text-sm font-bold text-white">Adventure</Link><Link href="/leaderboard/survival" className="rounded-xl bg-amber-300 px-4 py-2 text-sm font-bold text-[#172018]">Survival</Link></div><div className="game-panel mt-12 overflow-hidden rounded-3xl">{players.length ? <ol className="divide-y divide-white/7">{players.map((player, index) => <li key={player.id} className="flex items-center gap-5 px-6 py-5"><span className={`grid size-10 place-items-center rounded-xl text-sm font-black ${index < 3 ? "bg-amber-300/12 text-amber-300" : "bg-white/5 text-stone-500"}`}>{index + 1}</span><span className="min-w-0 flex-1 truncate font-bold text-white">{player.username}</span><span className="font-mono font-bold text-emerald-300">{player.points.toLocaleString()} kills</span></li>)}</ol> : <p className="px-6 py-16 text-center text-stone-500">No Survival records have been synced yet.</p>}</div></section></main>;
+}
